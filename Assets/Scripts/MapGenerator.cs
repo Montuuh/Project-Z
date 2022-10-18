@@ -53,13 +53,28 @@ public class MapGenerator : MonoBehaviour
         switch (drawMode)
         {
             case DrawMode.NoiseMap:
+                if (!mapDisplay.textureRenderer.gameObject.activeSelf)
+                    mapDisplay.textureRenderer.gameObject.SetActive(true);
+                if (mapDisplay.meshRenderer.gameObject.activeSelf)
+                    mapDisplay.meshRenderer.gameObject.SetActive(false);
+
                 mapDisplay.DrawTexture(TextureGenerator.TextureFromHeightMap(noiseMap));
                 break;
             case DrawMode.ColorMap:
+                if (!mapDisplay.textureRenderer.gameObject.activeSelf)
+                    mapDisplay.textureRenderer.gameObject.SetActive(true);
+                if (mapDisplay.meshRenderer.gameObject.activeSelf)
+                    mapDisplay.meshRenderer.gameObject.SetActive(false);
+
                 mapDisplay.DrawTexture(TextureGenerator.TextureFromColourMap(colourMap, mapWidth, mapHeight));
                 break;
             case DrawMode.Mesh:
-                //mapDisplay.DrawMesh(MeshGenerator.GenerateTerrainMesh(noiseMap), TextureGenerator.TextureFromColourMap(colourMap, mapWidth, mapHeight));
+                if (mapDisplay.textureRenderer.gameObject.activeSelf)
+                    mapDisplay.textureRenderer.gameObject.SetActive(false);
+                if (!mapDisplay.meshRenderer.gameObject.activeSelf)
+                    mapDisplay.meshRenderer.gameObject.SetActive(true);
+
+                mapDisplay.DrawMesh(MeshGenerator.GenerateTerrainMesh(noiseMap), TextureGenerator.TextureFromColourMap(colourMap, mapWidth, mapHeight));
                 break;
         }
     }
