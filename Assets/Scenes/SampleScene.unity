@@ -166,10 +166,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 89f202a18c2da904facd2b1bafab6272, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  drawMode: 1
   mapWidth: 100
-  mapHeight: 105
-  noiseScale: 5.37
+  mapHeight: 100
+  noiseScale: 25.06
+  octaves: 4
+  persistance: 0.409
+  lacunarity: 2.64
+  seed: 21
+  offset: {x: -10.64, y: 6}
   autoUpdate: 1
+  regions:
+  - name: Ocean
+    height: 0.2
+    color: {r: 0, g: 0.37225318, b: 0.8113208, a: 0}
+  - name: Water
+    height: 0.35
+    color: {r: 0, g: 0.45917082, b: 1, a: 0}
+  - name: Sand
+    height: 0.45
+    color: {r: 1, g: 0.9485841, b: 0.5990566, a: 0}
+  - name: Grass
+    height: 0.6
+    color: {r: 0.16848287, g: 0.745283, b: 0, a: 0}
+  - name: Grass2
+    height: 0.7
+    color: {r: 0.13664347, g: 0.6037736, b: 0, a: 0}
+  - name: Rock
+    height: 0.8
+    color: {r: 0.3301887, g: 0.26818097, b: 0.1012371, a: 0}
+  - name: Rock2
+    height: 0.9
+    color: {r: 0.18867922, g: 0.15749866, b: 0.075649686, a: 0}
+  - name: Snow
+    height: 1
+    color: {r: 1, g: 1, b: 1, a: 0}
 --- !u!4 &467503337
 Transform:
   m_ObjectHideFlags: 0
@@ -440,7 +471,7 @@ Transform:
   m_GameObject: {fileID: 2123041189}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 100, y: 1, z: 105}
+  m_LocalScale: {x: 100, y: 1, z: 100}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
