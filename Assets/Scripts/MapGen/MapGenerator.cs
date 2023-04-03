@@ -22,11 +22,25 @@ public class MapGenerator : MonoBehaviour
     [Range(0.1f, 1f)] public float persistance = 0.5f;
     [Range(1f, 10f)] public float lacunarity = 2f;
 
+    public Vector2 offset = new Vector2(0, 0);
+
     [Range(0.3f, 100f)] public float scale = 0.3f;
 
     public bool autoUpdate = true;
 
     public Renderer textureRenderer;
+
+    public void Start()
+    {
+
+    }
+
+    public void Update()
+    {
+        // Animation test
+        offset.x += Time.deltaTime * 10;
+        GenerateMap();
+    }
 
     public void GenerateMap()
     {
@@ -55,7 +69,7 @@ public class MapGenerator : MonoBehaviour
 
     private void GenerateMap2Dperlin()
     {
-        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(mapWidth, mapHeight, scale, octaves, persistance, lacunarity);
+        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(mapWidth, mapHeight, scale, octaves, persistance, lacunarity, offset);
 
         Color[] colorMap = new Color[mapWidth * mapHeight];
         for (int z = 0; z < mapHeight; z++)
@@ -75,7 +89,7 @@ public class MapGenerator : MonoBehaviour
 
     private void GenerateMap2DperlinWithoutOctaves()
     {
-        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(mapWidth, mapHeight, scale);
+        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(mapWidth, mapHeight, scale, offset);
 
         Color[] colorMap = new Color[mapWidth * mapHeight];
         for (int z = 0; z < mapHeight; z++)

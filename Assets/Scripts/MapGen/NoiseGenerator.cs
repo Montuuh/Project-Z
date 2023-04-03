@@ -5,7 +5,7 @@ using UnityEngine;
 public static class NoiseGenerator
 {
     // Basic noise map generation (without octaves and seeds)
-    public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, float scale)
+    public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, float scale, Vector2 offset)
     {
         // Check for invalid values
         if (scale < 0.3f)
@@ -24,8 +24,8 @@ public static class NoiseGenerator
             for (int x = 0; x < mapWidth; x++)
             {
                 // Sample noise map in noise space
-                float sampleX = x / scale;
-                float sampleY = y / scale;
+                float sampleX = (x + offset.x) / scale;
+                float sampleY = (y + offset.y) / scale;
 
                 // Calculate periln noise value at sample point given
                 float perlinVal = Mathf.PerlinNoise(sampleX, sampleY);
@@ -43,7 +43,7 @@ public static class NoiseGenerator
     }
 
     // Noise map generation with octaves, persistance and lacunarity
-    public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, float scale, int octaves, float persistance, float lacunarity)
+    public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, float scale, int octaves, float persistance, float lacunarity, Vector2 offset)
     {
         // Check for invalid values
         if (scale <= 0.3f)
@@ -68,8 +68,8 @@ public static class NoiseGenerator
                 for (int i = 0; i < octaves; i++)
                 {
                     // Sample noise map in noise space
-                    float sampleX = x / scale * frequency;
-                    float sampleY = y / scale * frequency;
+                    float sampleX = (x + offset.x) / scale * frequency;
+                    float sampleY = (y + offset.y) / scale * frequency;
 
                     // Calculate periln noise value at sample point given
                     float perlinVal = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;
