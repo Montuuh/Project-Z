@@ -35,11 +35,8 @@ public static class NoiseGenerator
             }
         }
 
-        // Normalize values
-        noiseMap = NormalizeFloatMap(noiseMap);
-
-        // Return noise map
-        return noiseMap;
+        // Return normalized noise map
+        return NormalizeFloatMap(noiseMap);
     }
 
     // Noise map generation with octaves, persistance and lacunarity
@@ -56,6 +53,19 @@ public static class NoiseGenerator
         // Create noise map array
         float[,] noiseMap = new float[mapWidth, mapHeight];
 
+        // Center noise map
+        float centerX = mapWidth / 2f;
+        float centerY = mapHeight / 2f;
+
+        // Octaves offset
+        Vector2[] octaveOffsets = new Vector2[octaves];
+        for (int i = 0; i < octaves; i++)
+        {
+            float offsetX = offset.x;
+            float offsetY = offset.y;
+            octaveOffsets[i] = new Vector2(offsetX, offsetY);
+        }
+
         // Generate noise map
         for (int y = 0; y < mapHeight; y++)
         {
@@ -68,61 +78,40 @@ public static class NoiseGenerator
                 for (int i = 0; i < octaves; i++)
                 {
                     // Sample noise map in noise space
-                    float sampleX = (x + offset.x) / scale * frequency;
-                    float sampleY = (y + offset.y) / scale * frequency;
+                    float sampleX = ((x - centerX) / scale * frequency) + octaveOffsets[i].x;
+                    float sampleY = ((y - centerY) / scale * frequency) + octaveOffsets[i].y;
 
                     // Calculate periln noise value at sample point given
-                    float perlinVal = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;
+                    float perlinVal = Mathf.PerlinNoise(sampleX, sampleY);
 
-                    // Add perlin noise value to octave height
+                    // Add perlin noise value to total octaves height
                     octaveHeight += perlinVal * amplitude;
 
-                    // Increase amplitude and frequency for next octave
+                    // Update amplitude and frequency for next octave
                     amplitude *= persistance;
                     frequency *= lacunarity;
                 }
 
-                // Assign the final octave height to the noise map
+                // Assign the final octaves height to the noise map
                 noiseMap[x, y] = octaveHeight;
             }
         }
 
-        // Normalize values
-        float maxNoiseHeight = float.MinValue;
-        float minNoiseHeight = float.MaxValue;
-        for (int y = 0; y < mapHeight; y++)
-        {
-            for (int x = 0; x < mapWidth; x++)
-            {
-                if (noiseMap[x, y] > maxNoiseHeight)
-                    maxNoiseHeight = noiseMap[x, y];
-                if (noiseMap[x, y] < minNoiseHeight)
-                    minNoiseHeight = noiseMap[x, y];
-            }
-        }
-        for (int y = 0; y < mapHeight; y++)
-        {
-            for (int x = 0; x < mapWidth; x++)
-            {
-                noiseMap[x, y] = Mathf.InverseLerp(minNoiseHeight, maxNoiseHeight, noiseMap[x, y]);
-            }
-        }
-
-        // Return noise map
-        return noiseMap;
+        // Return normalized noise map
+        return NormalizeFloatMap(noiseMap);
     }
 
-    public static float[,] NormalizeFloatMap(float[,] map)
+    private static float[,] NormalizeFloatMap(float[,] map)
     {
         float minValue = float.MaxValue;
         float maxValue = float.MinValue;
 
         // Find the minimum and maximum values in the noise map
-        for (int y = 0; y < map.GetLength(0); y++)
+        for (int y = 0; y < map.GetLength(1); y++)
         {
-            for (int x = 0; x < map.GetLength(1); x++)
+            for (int x = 0; x < map.GetLength(0); x++)
             {
-                float value = map[y, x];
+                float value = map[x, y];
                 if (value < minValue) minValue = value;
                 if (value > maxValue) maxValue = value;
             }
@@ -131,11 +120,11 @@ public static class NoiseGenerator
         // Normalize the noise map values
         float[,] normalizedMap = new float[map.GetLength(0), map.GetLength(1)];
 
-        for (int y = 0; y < map.GetLength(0); y++)
+        for (int y = 0; y < map.GetLength(1); y++)
         {
-            for (int x = 0; x < map.GetLength(1); x++)
+            for (int x = 0; x < map.GetLength(0); x++)
             {
-                normalizedMap[y, x] = Mathf.InverseLerp(minValue, maxValue, map[y, x]);
+                normalizedMap[x, y] = Mathf.InverseLerp(minValue, maxValue, map[x, y]);
             }
         }
 
