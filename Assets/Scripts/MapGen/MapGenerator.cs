@@ -5,6 +5,7 @@ using UnityEngine;
 public enum MapTypeGen
 {
     Map2D_perlin,
+    Map2D_perlin_without_octaves,
     Map2D_texture,
     Map3D_perlin,
     Map3D_texture
@@ -13,12 +14,16 @@ public enum MapTypeGen
 public class MapGenerator : MonoBehaviour
 {
     public MapTypeGen mapType;
-    [Range(1, 100)]
-    public int mapWidth = 10;
-    [Range(1, 100)]
-    public int mapHeight = 10;
-    [Range(0.3f, 100f)]
-    public float scale = 0.3f;
+
+    [Range(1, 100)] public int mapWidth = 10;
+    [Range(1, 100)] public int mapHeight = 10;
+
+    [Range(1, 10)] public int octaves = 1;
+    [Range(0.1f, 1f)] public float persistance = 0.5f;
+    [Range(1f, 10f)] public float lacunarity = 2f;
+
+    [Range(0.3f, 100f)] public float scale = 0.3f;
+
     public bool autoUpdate = true;
 
     public Renderer textureRenderer;
@@ -29,6 +34,9 @@ public class MapGenerator : MonoBehaviour
         {
             case MapTypeGen.Map2D_perlin:
                 GenerateMap2Dperlin();
+                break;
+            case MapTypeGen.Map2D_perlin_without_octaves:
+                GenerateMap2DperlinWithoutOctaves();
                 break;
             case MapTypeGen.Map2D_texture:
                 GenerateMap2Dtexture();
@@ -46,6 +54,26 @@ public class MapGenerator : MonoBehaviour
     }
 
     private void GenerateMap2Dperlin()
+    {
+        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(mapWidth, mapHeight, scale, octaves, persistance, lacunarity);
+
+        Color[] colorMap = new Color[mapWidth * mapHeight];
+        for (int z = 0; z < mapHeight; z++)
+        {
+            for (int x = 0; x < mapWidth; x++)
+            {
+                colorMap[z * mapWidth + x] = Color.Lerp(Color.black, Color.white, noiseMap[x, z]);
+            }
+        }
+
+        Texture2D texture = new Texture2D(mapWidth, mapHeight);
+        texture.SetPixels(colorMap);
+        texture.Apply();
+
+        textureRenderer.sharedMaterial.mainTexture = texture;
+    }
+
+    private void GenerateMap2DperlinWithoutOctaves()
     {
         float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(mapWidth, mapHeight, scale);
 
