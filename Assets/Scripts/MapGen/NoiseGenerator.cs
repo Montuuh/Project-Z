@@ -5,23 +5,19 @@ using UnityEngine;
 public static class NoiseGenerator
 {
     // Basic noise map generation (without octaves and seeds)
-    public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, float scale, Vector2 offset)
+    public static float[,] GenerateNoiseMap(int chunkSize, float scale, Vector2 offset)
     {
         // Check for invalid values
         if (scale < 0.3f)
             scale = 0.3f;
-        if (mapWidth <= 0)
-            mapWidth = 1;
-        if (mapWidth <= 0)
-            mapWidth = 1;
 
         // Create noise map array
-        float[,] noiseMap = new float[mapWidth, mapHeight];
+        float[,] noiseMap = new float[chunkSize, chunkSize];
 
         // Generate noise map
-        for (int y = 0; y < mapHeight; y++)
+        for (int y = 0; y < chunkSize; y++)
         {
-            for (int x = 0; x < mapWidth; x++)
+            for (int x = 0; x < chunkSize; x++)
             {
                 // Sample noise map in noise space
                 float sampleX = (x + offset.x) / scale;
@@ -40,22 +36,18 @@ public static class NoiseGenerator
     }
 
     // Noise map generation with octaves, persistance and lacunarity
-    public static float[,] GenerateNoiseMap(int mapWidth, int mapHeight, float scale, int octaves, float persistance, float lacunarity, Vector2 offset)
+    public static float[,] GenerateNoiseMap(int chunkSize, float scale, int octaves, float persistance, float lacunarity, Vector2 offset)
     {
         // Check for invalid values
         if (scale <= 0.3f)
             scale = 0.3f;
-        if (mapWidth <= 0)
-            mapWidth = 1;
-        if (mapWidth <= 0)
-            mapWidth = 1;
 
         // Create noise map array
-        float[,] noiseMap = new float[mapWidth, mapHeight];
+        float[,] noiseMap = new float[chunkSize, chunkSize];
 
         // Center noise map
-        float centerX = mapWidth / 2f;
-        float centerY = mapHeight / 2f;
+        float centerX = chunkSize / 2f;
+        float centerY = chunkSize / 2f;
 
         // Octaves offset
         Vector2[] octaveOffsets = new Vector2[octaves];
@@ -67,9 +59,9 @@ public static class NoiseGenerator
         }
 
         // Generate noise map
-        for (int y = 0; y < mapHeight; y++)
+        for (int y = 0; y < chunkSize; y++)
         {
-            for (int x = 0; x < mapWidth; x++)
+            for (int x = 0; x < chunkSize; x++)
             {
                 float amplitude = 1.0f;
                 float frequency = 1.0f;
@@ -78,8 +70,8 @@ public static class NoiseGenerator
                 for (int i = 0; i < octaves; i++)
                 {
                     // Sample noise map in noise space
-                    float sampleX = ((x - centerX) / scale * frequency) + octaveOffsets[i].x;
-                    float sampleY = ((y - centerY) / scale * frequency) + octaveOffsets[i].y;
+                    float sampleX = (x - centerX) / scale * frequency + octaveOffsets[i].x * frequency;
+                    float sampleY = (y - centerY) / scale * frequency - octaveOffsets[i].y * frequency;
 
                     // Calculate periln noise value at sample point given
                     float perlinVal = Mathf.PerlinNoise(sampleX, sampleY);

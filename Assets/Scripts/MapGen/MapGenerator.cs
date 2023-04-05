@@ -6,8 +6,8 @@ public class MapGenerator : MonoBehaviour
 {
     public MapTypeGen mapType;
 
-    [Range(1, 100)] public int mapWidth = 10;
-    [Range(1, 100)] public int mapHeight = 10;
+    [SerializeField] public int chunkSize = 256;
+    [Range(0, 6)] public int lod = 0;
 
     [Range(1, 10)] public int octaves = 1;
     [Range(0.1f, 1f)] public float persistance = 0.5f;
@@ -15,8 +15,7 @@ public class MapGenerator : MonoBehaviour
 
     [Range(0.3f, 100f)] public float scale = 0.3f;
 
-    [Range(0.5f, 50f)]
-    public float heightMultiplier = 1f;
+    [Range(0.5f, 50f)] public float heightMultiplier = 1f;
     public AnimationCurve heightCurve;
     public Vector2 offset = new Vector2(0, 0);
 
@@ -83,46 +82,34 @@ public class MapGenerator : MonoBehaviour
 
     private void GenerateMap2DperlinWithoutOctaves()
     {
-        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(mapWidth, mapHeight, scale, offset);
+        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, scale, offset);
         SetTexture(TextureHelper.NoiseMapToTexture(noiseMap));
     }
 
     private void GenerateMap2Dperlin()
     {
-        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(mapWidth, mapHeight, scale, octaves, persistance, lacunarity, offset);
+        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, scale, octaves, persistance, lacunarity, offset);
         SetTexture(TextureHelper.NoiseMapToTexture(noiseMap));
     }
 
     private void GenerateMap2Dtexture()
     {
-        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(mapWidth, mapHeight, scale, octaves, persistance, lacunarity, offset);
-        SetTexture(TextureHelper.ColorMapToTexture(GetColorMapFromNoiseMap(noiseMap), mapWidth, mapHeight));
+        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, scale, octaves, persistance, lacunarity, offset);
+        SetTexture(TextureHelper.ColorMapToTexture(GetColorMapFromNoiseMap(noiseMap), chunkSize));
     }
 
     private void GenerateMap3Dperlin()
     {
-        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(mapWidth, mapHeight, scale, octaves, persistance, lacunarity, offset);
+        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, scale, octaves, persistance, lacunarity, offset);
         meshFilter.sharedMesh = MeshHelperGenerator.GenerateMesh(noiseMap, heightMultiplier, heightCurve).ToMesh();
         SetTexture(TextureHelper.NoiseMapToTexture(noiseMap));
     }
 
     private void GenerateMap3Dtexture()
     {
-        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(mapWidth, mapHeight, scale, octaves, persistance, lacunarity, offset);
+        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, scale, octaves, persistance, lacunarity, offset);
         meshFilter.sharedMesh = MeshHelperGenerator.GenerateMesh(noiseMap, heightMultiplier, heightCurve).ToMesh();
-        SetTexture(TextureHelper.ColorMapToTexture(GetColorMapFromNoiseMap(noiseMap), mapWidth, mapHeight));
-    }
-
-    private void InitializeTerrainTypes()
-    {
-        terrainTypes = new TerrainType[]
-        {
-            new TerrainType("Water", 0, new Color(0, 0, 1)),
-            new TerrainType("Sand", 0.2f, new Color(1, 1, 0)),
-            new TerrainType("Grass", 0.5f, new Color(0, 1, 0)),
-            new TerrainType("Rock", 0.7f, new Color(0.5f, 0.5f, 0.5f)),
-            new TerrainType("Snow", 1, new Color(1, 1, 1))
-        };
+        SetTexture(TextureHelper.ColorMapToTexture(GetColorMapFromNoiseMap(noiseMap), chunkSize));
     }
 
     private void SetTexture(Texture2D texture)
@@ -139,20 +126,19 @@ public class MapGenerator : MonoBehaviour
 
     private Color[] GetColorMapFromNoiseMap(float[,] noiseMap)
     {
-        int mapWidth = noiseMap.GetLength(0);
-        int mapHeight = noiseMap.GetLength(1);
+        int chunkSize = noiseMap.GetLength(0);
 
-        Color[] colorMap = new Color[mapWidth * mapHeight];
-        for (int y = 0; y < mapHeight; y++)
+        Color[] colorMap = new Color[chunkSize * chunkSize];
+        for (int y = 0; y < chunkSize; y++)
         {
-            for (int x = 0; x < mapWidth; x++)
+            for (int x = 0; x < chunkSize; x++)
             {
                 float currentHeight = noiseMap[x, y];
                 for (int i = 0; i < terrainTypes.Length; i++)
                 {
                     if (currentHeight <= terrainTypes[i].height)
                     {
-                        colorMap[y * mapWidth + x] = terrainTypes[i].color;
+                        colorMap[y * chunkSize + x] = terrainTypes[i].color;
                         break;
                     }
                 }
@@ -166,9 +152,9 @@ public class MapGenerator : MonoBehaviour
 public static class TextureHelper
 {
     // This function transforms a color map into a texture
-    public static Texture2D ColorMapToTexture(Color[] colorMap, int width, int height)
+    public static Texture2D ColorMapToTexture(Color[] colorMap, int chunkSize)
     {
-        Texture2D texture = new Texture2D(width, height);
+        Texture2D texture = new Texture2D(chunkSize, chunkSize);
         texture.SetPixels(colorMap);
         texture.Apply();
         return texture;
@@ -177,48 +163,46 @@ public static class TextureHelper
     // This function transforms a noise map into a texture
     public static Texture2D NoiseMapToTexture(float[,] noiseMap)
     {
-        int width = noiseMap.GetLength(0);
-        int height = noiseMap.GetLength(1);
+        int chunkSize = noiseMap.GetLength(0);
 
-        Color[] colorMap = new Color[width * height];
-        for (int y = 0; y < height; y++)
+        Color[] colorMap = new Color[chunkSize * chunkSize];
+        for (int y = 0; y < chunkSize; y++)
         {
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < chunkSize; x++)
             {
-                colorMap[y * width + x] = Color.Lerp(Color.black, Color.white, noiseMap[x, y]);
+                colorMap[y * chunkSize + x] = Color.Lerp(Color.black, Color.white, noiseMap[x, y]);
             }
         }
 
-        return ColorMapToTexture(colorMap, width, height);
+        return ColorMapToTexture(colorMap, chunkSize);
     }
 }
 
 public static class MeshHelperGenerator
 {
-    public static MeshHelper GenerateMesh(float[,] noiseMap, float heightMultiplier, AnimationCurve heightCurve)
+    public static MeshHelper GenerateMesh(float[,] noiseMap, float heightMultiplier, AnimationCurve heightCurve, int levelOfDetail = 0)
     {
-        int width = noiseMap.GetLength(0);
-        int height = noiseMap.GetLength(1);
+        int chunkSize = noiseMap.GetLength(0);
 
-        float centerX = (width - 1) / -2f;
-        float centerZ = (height - 1) / 2f;
+        float centerX = (chunkSize - 1) / -2f;
+        float centerZ = (chunkSize - 1) / 2f;
 
-        MeshHelper meshHelper = new MeshHelper(width, height);
+        MeshHelper meshHelper = new MeshHelper(chunkSize);
 
         int vi = 0; // vertex index
         int ti = 0; // triangle index
 
-        for (int y = 0; y < height; y++)
+        for (int y = 0; y < chunkSize; y++)
         {
-            for (int x = 0; x < width; x++)
+            for (int x = 0; x < chunkSize; x++)
             {
                 meshHelper.SetVertex(vi, centerX + x, heightCurve.Evaluate(noiseMap[x, y]) * heightMultiplier, centerZ - y);
-                meshHelper.SetUV(vi, x / (float)width, y / (float)height);
+                meshHelper.SetUV(vi, x / (float)chunkSize, y / (float)chunkSize);
 
-                if (x < width - 1 && y < height - 1)
+                if (x < chunkSize - 1 && y < chunkSize - 1)
                 {
-                    meshHelper.SetTriangle(ti, vi, vi + width + 1, vi + width);
-                    meshHelper.SetTriangle(ti + 3, vi + width + 1, vi, vi + 1);
+                    meshHelper.SetTriangle(ti, vi, vi + chunkSize + 1, vi + chunkSize);
+                    meshHelper.SetTriangle(ti + 3, vi + chunkSize + 1, vi, vi + 1);
 
                     ti += 6;
                 }
@@ -236,17 +220,13 @@ public class MeshHelper
     private Vector3[] vertices;
     private int[] triangles;
     private Vector2[] uvs;
-    private int width;
-    private int height;
 
     // Constructor
-    public MeshHelper(int width, int height)
+    public MeshHelper(int chunkSize)
     {
-        vertices = new Vector3[width * height];
-        triangles = new int[(width - 1) * (height - 1) * 6];
-        uvs = new Vector2[width * height];
-        this.width = width;
-        this.height = height;
+        vertices = new Vector3[chunkSize * chunkSize];
+        triangles = new int[(chunkSize - 1) * (chunkSize - 1) * 6];
+        uvs = new Vector2[chunkSize * chunkSize];
     }
 
     // Setters
