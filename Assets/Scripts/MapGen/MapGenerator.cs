@@ -125,9 +125,9 @@ public class MapGenerator : MonoBehaviour
     {
         float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(mapWidth, mapHeight, scale, octaves, persistance, lacunarity, offset);
         meshFilter.sharedMesh = MeshHelperGenerator.GenerateMesh(noiseMap).ToMesh();
-        // meshRenderer.sharedMaterial.mainTexture = TextureHelper.ColorMapToTexture(GetColorMapFromNoiseMap(noiseMap), mapWidth, mapHeight);
         meshRenderer.sharedMaterial.mainTexture = TextureHelper.NoiseMapToTexture(noiseMap);
         meshRenderer.sharedMaterial.mainTexture.wrapMode = TextureWrapMode.Clamp;
+        meshRenderer.sharedMaterial.mainTexture.filterMode = FilterMode.Point;
     }
 
     private void GenerateMap3Dtexture()
@@ -136,6 +136,7 @@ public class MapGenerator : MonoBehaviour
         meshFilter.sharedMesh = MeshHelperGenerator.GenerateMesh(noiseMap).ToMesh();
         meshRenderer.sharedMaterial.mainTexture = TextureHelper.ColorMapToTexture(GetColorMapFromNoiseMap(noiseMap), mapWidth, mapHeight);
         meshRenderer.sharedMaterial.mainTexture.wrapMode = TextureWrapMode.Clamp;
+        meshRenderer.sharedMaterial.mainTexture.filterMode = FilterMode.Point;
     }
 
     private void InitializeTerrainTypes()
@@ -155,6 +156,7 @@ public class MapGenerator : MonoBehaviour
         texture2DRenderer.sharedMaterial.mainTexture = texture;
         texture2DRenderer.transform.localScale = new Vector3(texture.width, 1, texture.height);
         texture.wrapMode = TextureWrapMode.Clamp;
+        texture.filterMode = FilterMode.Point;
     }
 
     private Color[] GetColorMapFromNoiseMap(float[,] noiseMap)
@@ -232,8 +234,8 @@ public static class MeshHelperGenerator
                 // Flip Y axis
                 float yFlipped = height - y - 1;
 
-                meshHelper.SetVertex(vi, x, noiseMap[x, y], yFlipped);
-                meshHelper.SetUV(vi, x / (float)width, yFlipped / (float)height);
+                meshHelper.SetVertex(vi, x, noiseMap[x, y] * 5, y);
+                meshHelper.SetUV(vi, x / (float)width, y / (float)height);
 
                 if (x < width - 1 && y < height - 1)
                 {
@@ -272,11 +274,13 @@ public class MeshHelper
     // Setters
     public void SetVertex(int i, float x, float y, float z, bool center = true)
     {
+        // vertices[i] = new Vector3(x, y, z);
+        // return;
         if (center)
         {
-            float xCenter = (width - 1) * 0.5f;
-            float zCenter = (height - 1) * 0.5f;
-            vertices[i] = new Vector3(x - xCenter, y, z - zCenter);
+            float xCenter = (width - 1) / -2f;
+            float zCenter = (height - 1) / 2f;
+            vertices[i] = new Vector3(x + xCenter, y, zCenter - z);
         }
         else
             vertices[i] = new Vector3(x, y, z);
@@ -292,22 +296,6 @@ public class MeshHelper
     public void SetUV(int i, float x, float y)
     {
         uvs[i] = new Vector2(x, y);
-    }
-
-    // Getters
-    public Vector3[] GetVertices()
-    {
-        return vertices;
-    }
-
-    public int[] GetTriangles()
-    {
-        return triangles;
-    }
-
-    public Vector2[] GetUVs()
-    {
-        return uvs;
     }
 
     // This function transforms the mesh helper class into a mesh
