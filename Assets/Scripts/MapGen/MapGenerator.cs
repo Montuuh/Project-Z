@@ -15,6 +15,9 @@ public class MapGenerator : MonoBehaviour
 
     [Range(0.3f, 100f)] public float scale = 0.3f;
 
+    [Range(0.5f, 50f)]
+    public float heightMultiplier = 1f;
+    public AnimationCurve heightCurve;
     public Vector2 offset = new Vector2(0, 0);
 
     public bool autoUpdate = true;
@@ -28,39 +31,14 @@ public class MapGenerator : MonoBehaviour
 
     public void Start()
     {
-        GenerateMap();
+        // GenerateMap();
     }
 
     public void Update()
     {
         // Animation test
-        offset.x += Time.deltaTime * 10;
+        offset.x += Time.deltaTime;
         GenerateMap();
-
-        // Keyboard input test
-        if (Input.GetKeyDown(KeyCode.UpArrow))
-        {
-            offset.y += 100;
-            GenerateMap();
-        }
-
-        if (Input.GetKeyDown(KeyCode.DownArrow))
-        {
-            offset.y -= 100;
-            GenerateMap();
-        }
-
-        if (Input.GetKeyDown(KeyCode.LeftArrow))
-        {
-            offset.x -= 100;
-            GenerateMap();
-        }
-
-        if (Input.GetKeyDown(KeyCode.RightArrow))
-        {
-            offset.x += 100;
-            GenerateMap();
-        }
     }
 
     public void GenerateMap()
@@ -124,19 +102,15 @@ public class MapGenerator : MonoBehaviour
     private void GenerateMap3Dperlin()
     {
         float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(mapWidth, mapHeight, scale, octaves, persistance, lacunarity, offset);
-        meshFilter.sharedMesh = MeshHelperGenerator.GenerateMesh(noiseMap).ToMesh();
-        meshRenderer.sharedMaterial.mainTexture = TextureHelper.NoiseMapToTexture(noiseMap);
-        meshRenderer.sharedMaterial.mainTexture.wrapMode = TextureWrapMode.Clamp;
-        meshRenderer.sharedMaterial.mainTexture.filterMode = FilterMode.Point;
+        meshFilter.sharedMesh = MeshHelperGenerator.GenerateMesh(noiseMap, heightMultiplier, heightCurve).ToMesh();
+        SetTexture(TextureHelper.NoiseMapToTexture(noiseMap));
     }
 
     private void GenerateMap3Dtexture()
     {
         float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(mapWidth, mapHeight, scale, octaves, persistance, lacunarity, offset);
-        meshFilter.sharedMesh = MeshHelperGenerator.GenerateMesh(noiseMap).ToMesh();
-        meshRenderer.sharedMaterial.mainTexture = TextureHelper.ColorMapToTexture(GetColorMapFromNoiseMap(noiseMap), mapWidth, mapHeight);
-        meshRenderer.sharedMaterial.mainTexture.wrapMode = TextureWrapMode.Clamp;
-        meshRenderer.sharedMaterial.mainTexture.filterMode = FilterMode.Point;
+        meshFilter.sharedMesh = MeshHelperGenerator.GenerateMesh(noiseMap, heightMultiplier, heightCurve).ToMesh();
+        SetTexture(TextureHelper.ColorMapToTexture(GetColorMapFromNoiseMap(noiseMap), mapWidth, mapHeight));
     }
 
     private void InitializeTerrainTypes()
@@ -157,6 +131,10 @@ public class MapGenerator : MonoBehaviour
         texture2DRenderer.transform.localScale = new Vector3(texture.width, 1, texture.height);
         texture.wrapMode = TextureWrapMode.Clamp;
         texture.filterMode = FilterMode.Point;
+
+        meshRenderer.sharedMaterial.mainTexture = texture;
+        meshRenderer.sharedMaterial.mainTexture.wrapMode = TextureWrapMode.Clamp;
+        meshRenderer.sharedMaterial.mainTexture.filterMode = FilterMode.Point;
     }
 
     private Color[] GetColorMapFromNoiseMap(float[,] noiseMap)
@@ -217,10 +195,13 @@ public static class TextureHelper
 
 public static class MeshHelperGenerator
 {
-    public static MeshHelper GenerateMesh(float[,] noiseMap)
+    public static MeshHelper GenerateMesh(float[,] noiseMap, float heightMultiplier, AnimationCurve heightCurve)
     {
         int width = noiseMap.GetLength(0);
         int height = noiseMap.GetLength(1);
+
+        float centerX = (width - 1) / -2f;
+        float centerZ = (height - 1) / 2f;
 
         MeshHelper meshHelper = new MeshHelper(width, height);
 
@@ -231,10 +212,7 @@ public static class MeshHelperGenerator
         {
             for (int x = 0; x < width; x++)
             {
-                // Flip Y axis
-                float yFlipped = height - y - 1;
-
-                meshHelper.SetVertex(vi, x, noiseMap[x, y] * 5, y);
+                meshHelper.SetVertex(vi, centerX + x, heightCurve.Evaluate(noiseMap[x, y]) * heightMultiplier, centerZ - y);
                 meshHelper.SetUV(vi, x / (float)width, y / (float)height);
 
                 if (x < width - 1 && y < height - 1)
@@ -272,18 +250,9 @@ public class MeshHelper
     }
 
     // Setters
-    public void SetVertex(int i, float x, float y, float z, bool center = true)
+    public void SetVertex(int i, float x, float y, float z)
     {
-        // vertices[i] = new Vector3(x, y, z);
-        // return;
-        if (center)
-        {
-            float xCenter = (width - 1) / -2f;
-            float zCenter = (height - 1) / 2f;
-            vertices[i] = new Vector3(x + xCenter, y, zCenter - z);
-        }
-        else
-            vertices[i] = new Vector3(x, y, z);
+        vertices[i] = new Vector3(x, y, z);
     }
 
     public void SetTriangle(int i, int a, int b, int c)
