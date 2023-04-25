@@ -7,7 +7,7 @@ public class MapGenerator : MonoBehaviour
     public MapTypeGen mapType;
 
     [SerializeField] public int chunkSize = 256;
-    [Range(0, 6)] public int lod = 0;
+    [Range(0, 3)] public int lodIndex = 0;
 
     [Range(1, 10)] public int octaves = 1;
     [Range(0.1f, 1f)] public float persistance = 0.5f;
@@ -101,14 +101,14 @@ public class MapGenerator : MonoBehaviour
     private void GenerateMap3Dperlin()
     {
         float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, scale, octaves, persistance, lacunarity, offset);
-        meshFilter.sharedMesh = MeshHelperGenerator.GenerateMesh(noiseMap, heightMultiplier, heightCurve).ToMesh();
+        meshFilter.sharedMesh = MeshHelperGenerator.GenerateTerrainMesh(noiseMap, heightMultiplier, heightCurve, lodIndex).ToMesh();
         SetTexture(TextureHelper.NoiseMapToTexture(noiseMap));
     }
 
     private void GenerateMap3Dtexture()
     {
         float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, scale, octaves, persistance, lacunarity, offset);
-        meshFilter.sharedMesh = MeshHelperGenerator.GenerateMesh(noiseMap, heightMultiplier, heightCurve).ToMesh();
+        meshFilter.sharedMesh = MeshHelperGenerator.GenerateTerrainMesh(noiseMap, heightMultiplier, heightCurve, lodIndex).ToMesh();
         SetTexture(TextureHelper.ColorMapToTexture(GetColorMapFromNoiseMap(noiseMap), chunkSize));
     }
 
@@ -180,29 +180,40 @@ public static class TextureHelper
 
 public static class MeshHelperGenerator
 {
-    public static MeshHelper GenerateMesh(float[,] noiseMap, float heightMultiplier, AnimationCurve heightCurve, int levelOfDetail = 0)
+    public static MeshHelper GenerateTerrainMesh(float[,] noiseMap, float heightMultiplier, AnimationCurve heightCurve, int lodLevel)
     {
         int chunkSize = noiseMap.GetLength(0);
+
+        // LOD SYSTEM
+        // LOD 0 = 1 vertex per square
+        // LOD 1 = 2 vertices per square
+        // LOD 2 = 4 vertices per square
+        // LOD 3 = 8 vertices per square
+        // LOD 4 = 16 vertices per square
+        int lodStep = lodLevel == 0 ? 1 : lodLevel * 2;
+        if (lodStep == 6) lodStep = 8;
+        lodStep = (int)Mathf.Pow(2, lodLevel);
+        int lodVertexCount = (chunkSize - 1) / lodStep + 1;
 
         float centerX = (chunkSize - 1) / -2f;
         float centerZ = (chunkSize - 1) / 2f;
 
-        MeshHelper meshHelper = new MeshHelper(chunkSize);
+        MeshHelper meshHelper = new MeshHelper(lodVertexCount);
 
         int vi = 0; // vertex index
         int ti = 0; // triangle index
 
-        for (int y = 0; y < chunkSize; y++)
+        for (int y = 0; y < chunkSize; y += lodStep)
         {
-            for (int x = 0; x < chunkSize; x++)
+            for (int x = 0; x < chunkSize; x += lodStep)
             {
                 meshHelper.SetVertex(vi, centerX + x, heightCurve.Evaluate(noiseMap[x, y]) * heightMultiplier, centerZ - y);
-                meshHelper.SetUV(vi, x / (float)chunkSize, y / (float)chunkSize);
+                meshHelper.SetUV(vi, x / (float)(chunkSize - 1), y / (float)(chunkSize - 1));
 
-                if (x < chunkSize - 1 && y < chunkSize - 1)
+                if (x < chunkSize - lodStep && y < chunkSize - lodStep)
                 {
-                    meshHelper.SetTriangle(ti, vi, vi + chunkSize + 1, vi + chunkSize);
-                    meshHelper.SetTriangle(ti + 3, vi + chunkSize + 1, vi, vi + 1);
+                    meshHelper.SetTriangle(ti, vi, vi + lodVertexCount + 1, vi + lodVertexCount);
+                    meshHelper.SetTriangle(ti + 3, vi + lodVertexCount + 1, vi, vi + 1);
 
                     ti += 6;
                 }
@@ -213,6 +224,7 @@ public static class MeshHelperGenerator
 
         return meshHelper;
     }
+
 }
 
 public class MeshHelper
