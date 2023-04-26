@@ -4,13 +4,13 @@ using UnityEngine;
 
 public class MapGenerator : MonoBehaviour
 {
-    public static MapGenerator mapGenerator;
+    public static MapGenerator Instance;
 
     public enum MapTypeGen { Map2D_perlin_without_octaves, Map2D_perlin, Map2D_texture, Map3D_perlin, Map3D_texture }
 
     public MapTypeGen mapType;
 
-    [SerializeField] public int chunkSize = 129;
+    [SerializeField] private const int chunkSize = 129;
     [Range(0, 3)] public int lodIndex = 0;
 
     [Range(1, 10)] public int octaves = 1;
@@ -29,17 +29,27 @@ public class MapGenerator : MonoBehaviour
 
     [SerializeField] public TerrainType[] terrainTypes;
 
+    // Getters
+    // It is -1 because the map is 129x129 but the chunks should be 128x128 
+    public int GetChunkSize() { return chunkSize - 1; }
+
+
+    // Unity Methods
+    public void Awake()
+    {
+        Instance = this;
+    }
+
     public void Start()
     {
-        mapGenerator = this;
         // GenerateMap();
     }
 
     public void Update()
     {
         // Animation test
-        offset.x += Time.deltaTime;
-        GenerateMap();
+        // offset.x += Time.deltaTime;
+        // GenerateMap();
     }
 
     public void GenerateMap()

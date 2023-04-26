@@ -279,7 +279,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!33 &1051286528
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -375,7 +375,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mapType: 4
-  chunkSize: 129
   lodIndex: 3
   octaves: 4
   persistance: 0.5

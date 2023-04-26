@@ -5,23 +5,20 @@ using UnityEngine;
 public class InfiniteChunks : MonoBehaviour
 {
     private Transform chunkHolder;
+    private const int maxRenderableChunkDistance = 2;
+    public static int numChunks = 1;
+    private int chunkSize;
 
-    public const int maxViewDistance = 100;
     public Transform viewer;
     public static Vector2 viewerPosition;
-    int chunkSize;
-    int chunksVisibleInViewDistance;
 
     Dictionary<Vector2, Chunk> chunkDictionary = new Dictionary<Vector2, Chunk>();
     List<Chunk> chunksVisibleLastUpdate = new List<Chunk>();
 
     void Start()
     {
-        // Set the chunk size to the size of the map. It is -1 because the map is 129x129 but the chunks should be 128x128 
-        chunkSize = MapGenerator.mapGenerator.chunkSize - 1;
-
-        // Set the number of chunks visible in the view distance
-        chunksVisibleInViewDistance = Mathf.RoundToInt(maxViewDistance / chunkSize);
+        // Set the chunk size to the size of the map
+        chunkSize = MapGenerator.Instance.GetChunkSize();
 
         // Set the chunk holder to the parent of the chunks
         chunkHolder = this.transform;
@@ -29,7 +26,7 @@ public class InfiniteChunks : MonoBehaviour
 
     void Update()
     {
-        viewerPosition = new Vector2(viewer.position.x, viewer.position.z) / chunkSize;
+        viewerPosition = new Vector2(viewer.position.x, viewer.position.z);
         UpdateVisibleChunks();
     }
 
@@ -43,31 +40,30 @@ public class InfiniteChunks : MonoBehaviour
         chunksVisibleLastUpdate.Clear();
 
         // Transform the viewer position to the chunk position
-        int currentChunkCoordX = Mathf.RoundToInt(viewerPosition.x);
-        int currentChunkCoordY = Mathf.RoundToInt(viewerPosition.y);
+        int currentChunkCoordX = Mathf.RoundToInt(viewerPosition.x / chunkSize);
+        int currentChunkCoordY = Mathf.RoundToInt(viewerPosition.y / chunkSize);
 
-        for (int yOffset = -chunksVisibleInViewDistance; yOffset <= chunksVisibleInViewDistance; yOffset++)
+        for (int yOffset = -maxRenderableChunkDistance; yOffset <= maxRenderableChunkDistance; yOffset++)
         {
-            for (int xOffset = -chunksVisibleInViewDistance; xOffset <= chunksVisibleInViewDistance; xOffset++)
+            for (int xOffset = -maxRenderableChunkDistance; xOffset <= maxRenderableChunkDistance; xOffset++)
             {
                 // 2D coordinates of the chunk
-                Vector2 viewedChunkCoord = new Vector2(currentChunkCoordX + xOffset, currentChunkCoordY + yOffset);
-
+                Vector2Int viewedChunkCoord = new Vector2Int(currentChunkCoordX + xOffset, currentChunkCoordY + yOffset);
                 // If the chunk is already in the dictionary, update it
                 if (chunkDictionary.ContainsKey(viewedChunkCoord))
                 {
                     chunkDictionary[viewedChunkCoord].UpdateChunk();
-
                     // If the chunk is visible, add it to the list of visible chunks
                     if (chunkDictionary[viewedChunkCoord].IsVisible())
                     {
                         chunksVisibleLastUpdate.Add(chunkDictionary[viewedChunkCoord]);
                     }
                 }
-                else 
+                else
                 {
                     // If the chunk is not in the dictionary, add it
-                    chunkDictionary.Add(viewedChunkCoord, new Chunk(viewedChunkCoord, chunkSize, chunkHolder));
+                    chunkDictionary.Add(viewedChunkCoord, new Chunk(viewedChunkCoord, chunkSize, chunkHolder, chunkSize));
+                    Debug.Log("Chunk " + viewedChunkCoord + " added");
                 }
             }
         }
@@ -77,25 +73,35 @@ public class InfiniteChunks : MonoBehaviour
     {
         public GameObject meshObject;
         public Vector2 position;
+        public Vector2Int coord;
         public Bounds bounds;
+        public int chunkSize;
+        public int numChunk;
 
-        public Chunk(Vector2 coord, int size, Transform parent)
+        public Chunk(Vector2Int coord, int size, Transform parent, int chunkSize)
         {
-            position = coord * size;
-            Vector3 positionV3 = new Vector3(position.x, 0, position.y);
+            this.numChunk = InfiniteChunks.numChunks;
+            InfiniteChunks.numChunks++;
+            this.coord = coord;
+            this.chunkSize = chunkSize;
+            position = this.coord * size;
             bounds = new Bounds(position, Vector2.one * size);
+            Vector3 positionV3 = new Vector3(position.x, 0, position.y);
 
-            meshObject = new GameObject("Chunk " + position.x + ", " + position.y);
+            // meshObject = new GameObject("Chunk " + position.x + ", " + position.y);
+            meshObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
+            meshObject.name = "Chunk " + numChunk + ": " + this.coord.x + ", " + this.coord.y;
             meshObject.transform.position = positionV3;
-            meshObject.transform.localScale = Vector3.one * size;
+            meshObject.transform.localScale = Vector3.one * size / 10f;
             meshObject.transform.parent = parent;
-            meshObject.layer = 9;
+            // meshObject.layer = 9;
+            SetVisible(false);
         }
 
         public void UpdateChunk()
         {
             float viewerDistanceFromNearestEdge = Mathf.Sqrt(bounds.SqrDistance(viewerPosition));
-            bool visible = viewerDistanceFromNearestEdge <= maxViewDistance;
+            bool visible = viewerDistanceFromNearestEdge <= (maxRenderableChunkDistance * this.chunkSize);
             SetVisible(visible);
         }
 
