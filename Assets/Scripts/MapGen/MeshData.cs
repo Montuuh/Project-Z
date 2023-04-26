@@ -3,14 +3,14 @@ using System.Collections.Generic;
 using UnityEngine;
 
 // This class contains general info about a mesh and has some methods to help with the creation of a mesh
-public class MeshHelper
+public class MeshData
 {
     private Vector3[] vertices;
     private int[] triangles;
     private Vector2[] uvs;
 
     // Constructor
-    public MeshHelper(int chunkSize)
+    public MeshData(int chunkSize)
     {
         vertices = new Vector3[chunkSize * chunkSize];
         triangles = new int[(chunkSize - 1) * (chunkSize - 1) * 6];
@@ -47,9 +47,9 @@ public class MeshHelper
     }
 }
 
-public static class MeshHelperGenerator
+public static class MeshDataHelper
 {
-    public static MeshHelper GenerateTerrainMesh(float[,] noiseMap, float heightMultiplier, AnimationCurve heightCurve, int lodLevel)
+    public static MeshData GenerateTerrainMesh(float[,] noiseMap, float heightMultiplier, AnimationCurve heightCurve, int lodLevel)
     {
         int chunkSize = noiseMap.GetLength(0);
 
@@ -68,7 +68,7 @@ public static class MeshHelperGenerator
         float centerZ = (chunkSize - 1) / 2f;
 
         // Initialize mesh helper variables
-        MeshHelper meshHelper = new MeshHelper(lodVertexCount);
+        MeshData MeshData = new MeshData(lodVertexCount);
 
         int vi = 0; // vertex index
         int ti = 0; // triangle index
@@ -77,14 +77,14 @@ public static class MeshHelperGenerator
         {
             for (int x = 0; x < chunkSize; x += lodStep)
             {
-                meshHelper.SetVertex(vi, centerX + x, heightCurve.Evaluate(noiseMap[x, y]) * heightMultiplier, centerZ - y);
-                meshHelper.SetUV(vi, x / (float)(chunkSize - 1), y / (float)(chunkSize - 1));
+                MeshData.SetVertex(vi, centerX + x, heightCurve.Evaluate(noiseMap[x, y]) * heightMultiplier, centerZ - y);
+                MeshData.SetUV(vi, x / (float)(chunkSize - 1), y / (float)(chunkSize - 1));
 
                 // We do not want to create triangles on the right and bottom edges of the mesh
                 if (x < chunkSize - lodStep && y < chunkSize - lodStep)
                 {
-                    meshHelper.SetTriangle(ti, vi, vi + lodVertexCount + 1, vi + lodVertexCount);
-                    meshHelper.SetTriangle(ti + 3, vi + lodVertexCount + 1, vi, vi + 1);
+                    MeshData.SetTriangle(ti, vi, vi + lodVertexCount + 1, vi + lodVertexCount);
+                    MeshData.SetTriangle(ti + 3, vi + lodVertexCount + 1, vi, vi + 1);
 
                     ti += 6;
                 }
@@ -93,6 +93,6 @@ public static class MeshHelperGenerator
             }
         }
 
-        return meshHelper;
+        return MeshData;
     }
 }

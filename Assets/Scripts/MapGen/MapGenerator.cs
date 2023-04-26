@@ -29,6 +29,8 @@ public class MapGenerator : MonoBehaviour
 
     [SerializeField] public TerrainType[] terrainTypes;
 
+    public Material terrainMaterial;
+
     // Getters
     // It is -1 because the map is 129x129 but the chunks should be 128x128 
     public int GetChunkSize() { return chunkSize - 1; }
@@ -132,14 +134,14 @@ public class MapGenerator : MonoBehaviour
     private void GenerateMap3Dperlin()
     {
         float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, scale, octaves, persistance, lacunarity, offset);
-        meshFilter.sharedMesh = MeshHelperGenerator.GenerateTerrainMesh(noiseMap, heightMultiplier, heightCurve, lodIndex).ToMesh();
+        meshFilter.sharedMesh = MeshDataHelper.GenerateTerrainMesh(noiseMap, heightMultiplier, heightCurve, lodIndex).ToMesh();
         SetTexture(TextureHelper.NoiseMapToTexture(noiseMap));
     }
 
     private void GenerateMap3Dtexture()
     {
         float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, scale, octaves, persistance, lacunarity, offset);
-        meshFilter.sharedMesh = MeshHelperGenerator.GenerateTerrainMesh(noiseMap, heightMultiplier, heightCurve, lodIndex).ToMesh();
+        meshFilter.sharedMesh = MeshDataHelper.GenerateTerrainMesh(noiseMap, heightMultiplier, heightCurve, lodIndex).ToMesh();
         SetTexture(TextureHelper.ColorMapToTexture(TextureHelper.GetColorMapFromNoiseMap(noiseMap, terrainTypes), chunkSize));
     }
 

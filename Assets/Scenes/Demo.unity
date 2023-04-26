@@ -375,7 +375,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mapType: 4
-  lodIndex: 3
+  lodIndex: 0
   octaves: 4
   persistance: 0.5
   lacunarity: 2
@@ -443,6 +443,7 @@ MonoBehaviour:
   - name: Snow
     height: 1
     color: {r: 1, g: 1, b: 1, a: 0}
+  terrainMaterial: {fileID: 2100000, guid: 34641c5a6c53a6249b681063db3ba323, type: 2}
 --- !u!4 &1306701750
 Transform:
   m_ObjectHideFlags: 0

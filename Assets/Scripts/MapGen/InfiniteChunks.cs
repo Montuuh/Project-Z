@@ -5,12 +5,13 @@ using UnityEngine;
 public class InfiniteChunks : MonoBehaviour
 {
     private Transform chunkHolder;
-    private const int maxRenderableChunkDistance = 2;
-    public static int numChunks = 1;
+    private static float maxViewDst = 128 * 2;
+    private static int numChunks = 1;
     private int chunkSize;
+    private int chunksVisibleInViewDst;
 
     public Transform viewer;
-    public static Vector2 viewerPosition;
+    private static Vector2 viewerPosition;
 
     Dictionary<Vector2, Chunk> chunkDictionary = new Dictionary<Vector2, Chunk>();
     List<Chunk> chunksVisibleLastUpdate = new List<Chunk>();
@@ -19,6 +20,9 @@ public class InfiniteChunks : MonoBehaviour
     {
         // Set the chunk size to the size of the map
         chunkSize = MapGenerator.Instance.GetChunkSize();
+
+        // Set the number of chunks visible in the view distance
+        chunksVisibleInViewDst = Mathf.RoundToInt(maxViewDst / chunkSize);
 
         // Set the chunk holder to the parent of the chunks
         chunkHolder = this.transform;
@@ -43,9 +47,10 @@ public class InfiniteChunks : MonoBehaviour
         int currentChunkCoordX = Mathf.RoundToInt(viewerPosition.x / chunkSize);
         int currentChunkCoordY = Mathf.RoundToInt(viewerPosition.y / chunkSize);
 
-        for (int yOffset = -maxRenderableChunkDistance; yOffset <= maxRenderableChunkDistance; yOffset++)
+        // Loop through all the chunks in the renderable distance
+        for (int yOffset = -chunksVisibleInViewDst; yOffset <= chunksVisibleInViewDst; yOffset++)
         {
-            for (int xOffset = -maxRenderableChunkDistance; xOffset <= maxRenderableChunkDistance; xOffset++)
+            for (int xOffset = -chunksVisibleInViewDst; xOffset <= chunksVisibleInViewDst; xOffset++)
             {
                 // 2D coordinates of the chunk
                 Vector2Int viewedChunkCoord = new Vector2Int(currentChunkCoordX + xOffset, currentChunkCoordY + yOffset);
@@ -63,7 +68,7 @@ public class InfiniteChunks : MonoBehaviour
                 {
                     // If the chunk is not in the dictionary, add it
                     chunkDictionary.Add(viewedChunkCoord, new Chunk(viewedChunkCoord, chunkSize, chunkHolder, chunkSize));
-                    Debug.Log("Chunk " + viewedChunkCoord + " added");
+                    // Debug.Log("Chunk " + viewedChunkCoord + " added");
                 }
             }
         }
@@ -78,30 +83,57 @@ public class InfiniteChunks : MonoBehaviour
         public int chunkSize;
         public int numChunk;
 
+        private MeshRenderer meshRenderer;
+        private MeshFilter meshFilter;
+        private MeshCollider meshCollider;
+
         public Chunk(Vector2Int coord, int size, Transform parent, int chunkSize)
         {
             this.numChunk = InfiniteChunks.numChunks;
-            InfiniteChunks.numChunks++;
             this.coord = coord;
-            this.chunkSize = chunkSize;
-            position = this.coord * size;
-            bounds = new Bounds(position, Vector2.one * size);
+
+            this.position = coord * size;
             Vector3 positionV3 = new Vector3(position.x, 0, position.y);
 
-            // meshObject = new GameObject("Chunk " + position.x + ", " + position.y);
-            meshObject = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            meshObject.name = "Chunk " + numChunk + ": " + this.coord.x + ", " + this.coord.y;
+            this.chunkSize = chunkSize;
+            this.bounds = new Bounds(position, Vector2.one * size);
+
+            meshObject = new GameObject("Chunk " + numChunk + ": " + this.coord.x + ", " + this.coord.y);
             meshObject.transform.position = positionV3;
-            meshObject.transform.localScale = Vector3.one * size / 10f;
             meshObject.transform.parent = parent;
-            // meshObject.layer = 9;
+
+            meshRenderer = meshObject.AddComponent<MeshRenderer>();
+            meshFilter = meshObject.AddComponent<MeshFilter>();
+            meshCollider = meshObject.AddComponent<MeshCollider>();
+
+            // Instance of map generator singleton
+            MapGenerator mapGenerator = MapGenerator.Instance;
+
+            // Terrain mesh
+            float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize + 1, mapGenerator.scale, mapGenerator.octaves, mapGenerator.persistance, mapGenerator.lacunarity, coord * chunkSize + mapGenerator.offset);
+            meshFilter.sharedMesh = MeshDataHelper.GenerateTerrainMesh(noiseMap, mapGenerator.heightMultiplier, mapGenerator.heightCurve, mapGenerator.lodIndex).ToMesh();
+
+            // Collider
+            meshCollider.sharedMesh = meshFilter.sharedMesh;
+
+            // Material and texture
+            Texture2D texture = TextureHelper.ColorMapToTexture(TextureHelper.GetColorMapFromNoiseMap(noiseMap, mapGenerator.terrainTypes), chunkSize + 1);
+            Material instanceMaterial = new Material(mapGenerator.terrainMaterial);
+            instanceMaterial.mainTexture = texture;
+            instanceMaterial.mainTexture.wrapMode = TextureWrapMode.Clamp;
+            instanceMaterial.mainTexture.filterMode = FilterMode.Point;
+
+            meshRenderer.sharedMaterial = instanceMaterial;
+
             SetVisible(false);
+
+            InfiniteChunks.numChunks++;
         }
 
         public void UpdateChunk()
         {
             float viewerDistanceFromNearestEdge = Mathf.Sqrt(bounds.SqrDistance(viewerPosition));
-            bool visible = viewerDistanceFromNearestEdge <= (maxRenderableChunkDistance * this.chunkSize);
+            bool visible = viewerDistanceFromNearestEdge <= maxViewDst;
             SetVisible(visible);
         }
 
