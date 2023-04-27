@@ -51,6 +51,8 @@ public static class MeshDataHelper
 {
     public static MeshData GenerateTerrainMesh(float[,] noiseMap, float heightMultiplier, AnimationCurve heightCurve, int lodLevel)
     {
+        AnimationCurve heightCurveCopy = new AnimationCurve(heightCurve.keys);
+
         int chunkSize = noiseMap.GetLength(0);
 
         // SKIPPING VERTICES LOD SYSTEM
@@ -77,7 +79,7 @@ public static class MeshDataHelper
         {
             for (int x = 0; x < chunkSize; x += lodStep)
             {
-                MeshData.SetVertex(vi, centerX + x, heightCurve.Evaluate(noiseMap[x, y]) * heightMultiplier, centerZ - y);
+                MeshData.SetVertex(vi, centerX + x, heightCurveCopy.Evaluate(noiseMap[x, y]) * heightMultiplier, centerZ - y);
                 MeshData.SetUV(vi, x / (float)(chunkSize - 1), y / (float)(chunkSize - 1));
 
                 // We do not want to create triangles on the right and bottom edges of the mesh

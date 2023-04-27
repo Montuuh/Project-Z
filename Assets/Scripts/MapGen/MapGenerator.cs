@@ -1,12 +1,15 @@
+using System;
 using System.Collections;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Threading;
 using UnityEngine;
 
 public class MapGenerator : MonoBehaviour
 {
     public static MapGenerator Instance;
 
-    public enum MapTypeGen { Map2D_perlin_without_octaves, Map2D_perlin, Map2D_texture, Map3D_perlin, Map3D_texture }
+    public enum MapTypeGen { Map2D_perlin, Map2D_texture, Map3D_perlin, Map3D_texture }
 
     public MapTypeGen mapType;
 
@@ -31,6 +34,8 @@ public class MapGenerator : MonoBehaviour
 
     public Material terrainMaterial;
 
+    private ConcurrentQueue<MapThreadInfo<MapData>> mapDataThreadInfoQueue = new ConcurrentQueue<MapThreadInfo<MapData>>();
+    
     // Getters
     // It is -1 because the map is 129x129 but the chunks should be 128x128 
     public int GetChunkSize() { return chunkSize - 1; }
@@ -44,14 +49,25 @@ public class MapGenerator : MonoBehaviour
 
     public void Start()
     {
-        // GenerateMap();
+
     }
 
     public void Update()
     {
-        // Animation test
-        // offset.x += Time.deltaTime;
-        // GenerateMap();
+        // This function checks if there is any map data to be processed
+        if (mapDataThreadInfoQueue.Count > 0)
+        {
+            for (int i = 0; i < mapDataThreadInfoQueue.Count; i++)
+            {
+                // Dequeue the concurrent queue
+                bool isDone = mapDataThreadInfoQueue.TryDequeue(out MapThreadInfo<MapData> threadInfo);
+
+                // Set the callback function
+                if (isDone)
+                    threadInfo.callback(threadInfo.parameter);
+            }
+
+        }
     }
 
     public void GenerateMap()
@@ -59,26 +75,48 @@ public class MapGenerator : MonoBehaviour
         // This function sets the active map (2D or 3D)
         SetActive();
 
+        // Generate map data
+        MapData mapData = GenerateMapData();
+
+        // Draw map
+        DrawMap(mapData);
+    }
+
+    private MapData GenerateMapData()
+    {
+        // Generate noise map
+        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, scale, octaves, persistance, lacunarity, offset);
+
+        // Generate color map
+        Color[] colorMap = TextureHelper.GetColorMapFromNoiseMap(noiseMap, terrainTypes);
+
+        // Generate mesh data
+        MeshData meshData = MeshDataHelper.GenerateTerrainMesh(noiseMap, heightMultiplier, heightCurve, lodIndex);
+
+        return new MapData(noiseMap, colorMap, meshData);
+    }
+
+    private void DrawMap(MapData mapData)
+    {
+        Texture2D texture2D = TextureHelper.NoiseMapToTexture(mapData.noiseMap);
         switch (mapType)
         {
-            case MapTypeGen.Map2D_perlin_without_octaves:
-                GenerateMap2DperlinWithoutOctaves();
-                break;
             case MapTypeGen.Map2D_perlin:
-                GenerateMap2Dperlin();
+                SetTexture(texture2D);
                 break;
             case MapTypeGen.Map2D_texture:
-                GenerateMap2Dtexture();
+                texture2D = TextureHelper.ColorMapToTexture(mapData.colorMap, chunkSize);
+                SetTexture(texture2D);
                 break;
             case MapTypeGen.Map3D_perlin:
-                GenerateMap3Dperlin();
+                SetTexture(texture2D);
+                meshFilter.sharedMesh = mapData.meshData.ToMesh();
                 break;
             case MapTypeGen.Map3D_texture:
-                GenerateMap3Dtexture();
+                texture2D = TextureHelper.ColorMapToTexture(mapData.colorMap, chunkSize);
+                SetTexture(texture2D);
+                meshFilter.sharedMesh = mapData.meshData.ToMesh();
                 break;
-            default:
-                Debug.LogError("MapTypeGen not implemented");
-                throw new System.NotImplementedException();
         }
     }
 
@@ -86,63 +124,17 @@ public class MapGenerator : MonoBehaviour
     {
         switch (mapType)
         {
-            case MapTypeGen.Map2D_perlin_without_octaves:
             case MapTypeGen.Map2D_perlin:
             case MapTypeGen.Map2D_texture:
-                SetActiveMap2D();
+                texture2DRenderer.gameObject.SetActive(true);
+                meshFilter.gameObject.SetActive(false);
                 break;
             case MapTypeGen.Map3D_perlin:
             case MapTypeGen.Map3D_texture:
-                SetActiveMap3D();
+                texture2DRenderer.gameObject.SetActive(false);
+                meshFilter.gameObject.SetActive(true);
                 break;
-            default:
-                Debug.LogError("MapTypeGen not implemented");
-                throw new System.NotImplementedException();
         }
-    }
-
-    private void SetActiveMap2D()
-    {
-        texture2DRenderer.gameObject.SetActive(true);
-        meshFilter.gameObject.SetActive(false);
-    }
-
-    private void SetActiveMap3D()
-    {
-        texture2DRenderer.gameObject.SetActive(false);
-        meshFilter.gameObject.SetActive(true);
-    }
-
-    private void GenerateMap2DperlinWithoutOctaves()
-    {
-        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, scale, offset);
-        SetTexture(TextureHelper.NoiseMapToTexture(noiseMap));
-    }
-
-    private void GenerateMap2Dperlin()
-    {
-        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, scale, octaves, persistance, lacunarity, offset);
-        SetTexture(TextureHelper.NoiseMapToTexture(noiseMap));
-    }
-
-    private void GenerateMap2Dtexture()
-    {
-        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, scale, octaves, persistance, lacunarity, offset);
-        SetTexture(TextureHelper.ColorMapToTexture(TextureHelper.GetColorMapFromNoiseMap(noiseMap, terrainTypes), chunkSize));
-    }
-
-    private void GenerateMap3Dperlin()
-    {
-        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, scale, octaves, persistance, lacunarity, offset);
-        meshFilter.sharedMesh = MeshDataHelper.GenerateTerrainMesh(noiseMap, heightMultiplier, heightCurve, lodIndex).ToMesh();
-        SetTexture(TextureHelper.NoiseMapToTexture(noiseMap));
-    }
-
-    private void GenerateMap3Dtexture()
-    {
-        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, scale, octaves, persistance, lacunarity, offset);
-        meshFilter.sharedMesh = MeshDataHelper.GenerateTerrainMesh(noiseMap, heightMultiplier, heightCurve, lodIndex).ToMesh();
-        SetTexture(TextureHelper.ColorMapToTexture(TextureHelper.GetColorMapFromNoiseMap(noiseMap, terrainTypes), chunkSize));
     }
 
     private void SetTexture(Texture2D texture)
@@ -155,6 +147,39 @@ public class MapGenerator : MonoBehaviour
         meshRenderer.sharedMaterial.mainTexture = texture;
         meshRenderer.sharedMaterial.mainTexture.wrapMode = TextureWrapMode.Clamp;
         meshRenderer.sharedMaterial.mainTexture.filterMode = FilterMode.Point;
+    }
+
+    // Threading
+    public void RequestMapData(Action<MapData> callback)
+    {
+        ThreadStart threadStart = delegate
+        {
+            MapDataThread(callback);
+        };
+
+        new Thread(threadStart).Start();
+    }
+
+    private void MapDataThread(Action<MapData> callback)
+    {
+        MapData mapData = GenerateMapData();
+        lock (mapDataThreadInfoQueue)
+        {
+            mapDataThreadInfoQueue.Enqueue(new MapThreadInfo<MapData>(callback, mapData));
+        }
+    }
+
+    // Structs & Classes
+    struct MapThreadInfo<T>
+    {
+        public readonly Action<T> callback;
+        public readonly T parameter;
+
+        public MapThreadInfo(Action<T> callback, T parameter)
+        {
+            this.callback = callback;
+            this.parameter = parameter;
+        }
     }
 }
 
@@ -176,3 +201,19 @@ public class TerrainType
     public float Height => height;
     public Color Color => color;
 }
+
+[System.Serializable]
+public struct MapData
+{
+    public float[,] noiseMap;
+    public Color[] colorMap;
+    public MeshData meshData;
+
+    public MapData(float[,] noiseMap, Color[] colorMap, MeshData meshData)
+    {
+        this.noiseMap = noiseMap;
+        this.colorMap = colorMap;
+        this.meshData = meshData;
+    }
+}
+

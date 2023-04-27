@@ -16,6 +16,9 @@ public class InfiniteChunks : MonoBehaviour
     Dictionary<Vector2, Chunk> chunkDictionary = new Dictionary<Vector2, Chunk>();
     List<Chunk> chunksVisibleLastUpdate = new List<Chunk>();
 
+    // Getters and Setters
+
+    // Unity Methods
     void Start()
     {
         // Set the chunk size to the size of the map
@@ -34,6 +37,7 @@ public class InfiniteChunks : MonoBehaviour
         UpdateVisibleChunks();
     }
 
+    // Methods
     void UpdateVisibleChunks()
     {
         // Set all the chunks visible last update to invisible
@@ -74,6 +78,8 @@ public class InfiniteChunks : MonoBehaviour
         }
     }
 
+
+    // Classes
     public class Chunk
     {
         public GameObject meshObject;
@@ -106,28 +112,22 @@ public class InfiniteChunks : MonoBehaviour
             meshFilter = meshObject.AddComponent<MeshFilter>();
             meshCollider = meshObject.AddComponent<MeshCollider>();
 
-            // Instance of map generator singleton
-            MapGenerator mapGenerator = MapGenerator.Instance;
-
-            // Terrain mesh
-            float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize + 1, mapGenerator.scale, mapGenerator.octaves, mapGenerator.persistance, mapGenerator.lacunarity, coord * chunkSize + mapGenerator.offset);
-            meshFilter.sharedMesh = MeshDataHelper.GenerateTerrainMesh(noiseMap, mapGenerator.heightMultiplier, mapGenerator.heightCurve, mapGenerator.lodIndex).ToMesh();
-
-            // Collider
-            meshCollider.sharedMesh = meshFilter.sharedMesh;
 
             // Material and texture
-            Texture2D texture = TextureHelper.ColorMapToTexture(TextureHelper.GetColorMapFromNoiseMap(noiseMap, mapGenerator.terrainTypes), chunkSize + 1);
-            Material instanceMaterial = new Material(mapGenerator.terrainMaterial);
-            instanceMaterial.mainTexture = texture;
-            instanceMaterial.mainTexture.wrapMode = TextureWrapMode.Clamp;
-            instanceMaterial.mainTexture.filterMode = FilterMode.Point;
+            // Texture2D texture = TextureHelper.ColorMapToTexture(TextureHelper.GetColorMapFromNoiseMap(noiseMap, mapGenerator.terrainTypes), chunkSize + 1);
+            // instanceMaterial.mainTexture = texture;
+            // instanceMaterial.mainTexture.wrapMode = TextureWrapMode.Clamp;
+            // instanceMaterial.mainTexture.filterMode = FilterMode.Point;
 
-            meshRenderer.sharedMaterial = instanceMaterial;
+            Material instanceMaterial = new Material(MapGenerator.Instance.terrainMaterial);
+            meshRenderer.material = instanceMaterial;
 
             SetVisible(false);
 
             InfiniteChunks.numChunks++;
+
+            // Threading
+            MapGenerator.Instance.RequestMapData(OnMapDataReceived);
         }
 
         public void UpdateChunk()
@@ -145,6 +145,19 @@ public class InfiniteChunks : MonoBehaviour
         public bool IsVisible()
         {
             return meshObject.activeSelf;
+        }
+
+        // Threading
+        private void OnMapDataReceived(MapData mapData)
+        {
+            Debug.Log("Map data received");
+
+            // Set the mesh
+            MeshData meshData = mapData.meshData;
+            meshFilter.sharedMesh = meshData.ToMesh();
+
+            // Set the collider
+            meshCollider.sharedMesh = meshFilter.sharedMesh;
         }
     }
 }
