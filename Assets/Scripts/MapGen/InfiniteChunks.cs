@@ -4,37 +4,61 @@ using UnityEngine;
 
 public class InfiniteChunks : MonoBehaviour
 {
+    public static InfiniteChunks Instance { get; private set; }
+
+    public LODDistance[] lodDistanceLevels;
+    private static float maxViewDst;
+
     private Transform chunkHolder;
-    private static float maxViewDst = 128 * 2;
-    private static int numChunks = 1;
     private int chunkSize;
     private int chunksVisibleInViewDst;
+    private static int numChunks = 1;
 
     public Transform viewer;
     private static Vector2 viewerPosition;
+    private static Vector2 viewerPositionOld;
+    private const float sqrViewerMoveThresholdForChunkUpdate = 25f;
 
-    Dictionary<Vector2, Chunk> chunkDictionary = new Dictionary<Vector2, Chunk>();
-    List<Chunk> chunksVisibleLastUpdate = new List<Chunk>();
+    private Dictionary<Vector2, Chunk> chunkDictionary = new Dictionary<Vector2, Chunk>();
+    private List<Chunk> chunksVisibleLastUpdate = new List<Chunk>();
+    
+    public Material material;
 
     // Getters and Setters
 
     // Unity Methods
-    void Start()
+    private void Awake()
+    {
+        Instance = this;
+    }
+
+    private void Start()
     {
         // Set the chunk size to the size of the map
         chunkSize = MapGenerator.Instance.GetChunkSize();
+
+        // Set the max view distance to the max view distance of the LODs
+        maxViewDst = lodDistanceLevels[lodDistanceLevels.Length - 1].distance;
 
         // Set the number of chunks visible in the view distance
         chunksVisibleInViewDst = Mathf.RoundToInt(maxViewDst / chunkSize);
 
         // Set the chunk holder to the parent of the chunks
         chunkHolder = this.transform;
+
+        UpdateVisibleChunks();
     }
 
     void Update()
     {
         viewerPosition = new Vector2(viewer.position.x, viewer.position.z);
-        UpdateVisibleChunks();
+
+        // If the viewer has moved more than the threshold, update the chunks
+        if ((viewerPositionOld - viewerPosition).sqrMagnitude > sqrViewerMoveThresholdForChunkUpdate)
+        {
+            viewerPositionOld = viewerPosition;
+            UpdateVisibleChunks();
+        }
     }
 
     // Methods
@@ -58,21 +82,18 @@ public class InfiniteChunks : MonoBehaviour
             {
                 // 2D coordinates of the chunk
                 Vector2Int viewedChunkCoord = new Vector2Int(currentChunkCoordX + xOffset, currentChunkCoordY + yOffset);
+
                 // If the chunk is already in the dictionary, update it
                 if (chunkDictionary.ContainsKey(viewedChunkCoord))
                 {
                     chunkDictionary[viewedChunkCoord].UpdateChunk();
-                    // If the chunk is visible, add it to the list of visible chunks
                     if (chunkDictionary[viewedChunkCoord].IsVisible())
-                    {
                         chunksVisibleLastUpdate.Add(chunkDictionary[viewedChunkCoord]);
-                    }
                 }
                 else
                 {
                     // If the chunk is not in the dictionary, add it
-                    chunkDictionary.Add(viewedChunkCoord, new Chunk(viewedChunkCoord, chunkSize, chunkHolder, chunkSize));
-                    // Debug.Log("Chunk " + viewedChunkCoord + " added");
+                    chunkDictionary.Add(viewedChunkCoord, new Chunk(viewedChunkCoord, chunkSize, chunkHolder, lodDistanceLevels, material));
                 }
             }
         }
@@ -82,28 +103,40 @@ public class InfiniteChunks : MonoBehaviour
     // Classes
     public class Chunk
     {
-        public GameObject meshObject;
-        public Vector2 position;
-        public Vector2Int coord;
-        public Bounds bounds;
-        public int chunkSize;
-        public int numChunk;
-        public int currentLOD;
+        private GameObject meshObject;
+        private Vector2 position;
+        private Bounds bounds;
+        private Vector2Int coord;
+        private int chunkSize;
+        private int numChunk;
 
         private MeshRenderer meshRenderer;
         private MeshFilter meshFilter;
         private MeshCollider meshCollider;
 
-        public Chunk(Vector2Int coord, int size, Transform parent, int chunkSize)
+        private LODMesh[] lodMeshes;
+        private LODDistance[] lodDistanceLevels;
+
+        private MapData mapData;
+        private bool mapDataReceived;
+        private int previousLOD;
+
+        public Chunk(Vector2Int coord, int chunkSize, Transform parent, LODDistance[] lodDistanceLevels, Material material)
         {
             this.numChunk = InfiniteChunks.numChunks;
-            this.coord = coord;
+            InfiniteChunks.numChunks++;
 
-            this.position = coord * size;
+            this.coord = coord;
+            this.position = coord * chunkSize;
             Vector3 positionV3 = new Vector3(position.x, 0, position.y);
 
+            this.lodDistanceLevels = lodDistanceLevels;
+            this.previousLOD = -1;
+            this.mapDataReceived = false;
+
+
             this.chunkSize = chunkSize;
-            this.bounds = new Bounds(position, Vector2.one * size);
+            this.bounds = new Bounds(position, Vector2.one * chunkSize);
 
             meshObject = new GameObject("Chunk " + numChunk + ": " + this.coord.x + ", " + this.coord.y);
             meshObject.transform.position = positionV3;
@@ -113,35 +146,50 @@ public class InfiniteChunks : MonoBehaviour
             meshFilter = meshObject.AddComponent<MeshFilter>();
             meshCollider = meshObject.AddComponent<MeshCollider>();
 
-
             // Material and texture
-            // Texture2D texture = TextureHelper.ColorMapToTexture(TextureHelper.GetColorMapFromNoiseMap(noiseMap, mapGenerator.terrainTypes), chunkSize + 1);
-            // instanceMaterial.mainTexture = texture;
-            // instanceMaterial.mainTexture.wrapMode = TextureWrapMode.Clamp;
-            // instanceMaterial.mainTexture.filterMode = FilterMode.Point;
+            meshRenderer.material = material;
 
-            Material instanceMaterial = new Material(MapGenerator.Instance.terrainMaterial);
-            meshRenderer.material = instanceMaterial;
-
-            SetVisible(false);
-
-            InfiniteChunks.numChunks++;
+            // LOD meshes
+            lodMeshes = new LODMesh[lodDistanceLevels.Length];
+            for (int i = 0; i < lodDistanceLevels.Length; i++)
+            {
+                lodMeshes[i] = new LODMesh(lodDistanceLevels[i].lod, UpdateChunk);
+            }
 
             // Threading
-            MapGenerator.Instance.RequestMapData(OnMapDataReceived, currentLOD);
+            MapGenerator.Instance.RequestMapData(OnMapDataReceived, position);
         }
 
         public void UpdateChunk()
         {
-            float viewerDistanceFromNearestEdge = Mathf.Sqrt(bounds.SqrDistance(viewerPosition));
-            int lod = Mathf.Min(2, Mathf.FloorToInt(viewerDistanceFromNearestEdge / (maxViewDst / 3f))); // Change the divisor to control LOD transition distance
-            if (currentLOD != lod)
-            {
-                currentLOD = lod;
-                MapGenerator.Instance.RequestMapData(OnMapDataReceived, currentLOD);
-            }
-            bool visible = viewerDistanceFromNearestEdge <= maxViewDst;
-            SetVisible(visible);
+            if (mapDataReceived) {
+				float viewerDstFromNearestEdge = Mathf.Sqrt (bounds.SqrDistance (viewerPosition));
+				bool visible = viewerDstFromNearestEdge <= maxViewDst;
+
+				if (visible) {
+					int lodIndex = 0;
+
+					for (int i = 0; i < lodDistanceLevels.Length - 1; i++) {
+						if (viewerDstFromNearestEdge > lodDistanceLevels [i].distance) {
+							lodIndex = i + 1;
+						} else {
+							break;
+						}
+					}
+
+					if (lodIndex != previousLOD) {
+						LODMesh lodMesh = lodMeshes [lodIndex];
+						if (lodMesh.hasMesh) {
+							previousLOD = lodIndex;
+							meshFilter.mesh = lodMesh.mesh;
+						} else if (!lodMesh.hasRequestedMesh) {
+							lodMesh.RequestMesh (mapData);
+						}
+					}
+				}
+
+				SetVisible (visible);
+			}
         }
 
         public void SetVisible(bool visible)
@@ -157,14 +205,54 @@ public class InfiniteChunks : MonoBehaviour
         // Threading
         private void OnMapDataReceived(MapData mapData)
         {
-            Debug.Log("Map data received. Coord = " + coord.x + ", " + coord.y + ", Size = " + chunkSize + ", LOD = " + mapData.lodIndex + ", Thread = " + System.Threading.Thread.CurrentThread.ManagedThreadId);
+            Debug.Log("Map data received. Coord = " + coord.x + ", " + coord.y + ", Thread = " + System.Threading.Thread.CurrentThread.ManagedThreadId);
 
-            // Set the mesh
-            MeshData meshData = mapData.meshData;
-            meshFilter.sharedMesh = meshData.ToMesh();
+            this.mapData = mapData;
+            mapDataReceived = true;
 
-            // Set the collider
-            meshCollider.sharedMesh = meshFilter.sharedMesh;
+            // Set the texture
+            // Texture2D texture = TextureHelper.ColorMapToTexture(mapData.colorMap, chunkSize);
+            // meshRenderer.material.mainTexture = texture;
+
+            UpdateChunk();
         }
+    }
+
+    private class LODMesh
+    {
+
+        public Mesh mesh;
+        public bool hasRequestedMesh;
+        public bool hasMesh;
+        public int lod;
+        System.Action updateCallback;
+
+        public LODMesh(int lod, System.Action updateCallback)
+        {
+            this.lod = lod;
+            this.updateCallback = updateCallback;
+        }
+
+        void OnMeshDataReceived(MeshData meshData)
+        {
+            mesh = meshData.ToMesh();
+            hasMesh = true;
+
+            updateCallback();
+        }
+
+        public void RequestMesh(MapData mapData)
+        {
+            hasRequestedMesh = true;
+            MapGenerator.Instance.RequestMeshData(OnMeshDataReceived, mapData, lod);
+        }
+
+    }
+
+    [System.Serializable]
+    public struct LODDistance
+    {
+        public int lod;
+        public float distance;
     }
 }

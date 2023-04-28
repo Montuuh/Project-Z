@@ -8,6 +8,8 @@ public static class TextureHelper
     public static Texture2D ColorMapToTexture(Color[] colorMap, int chunkSize)
     {
         Texture2D texture = new Texture2D(chunkSize, chunkSize);
+        texture.filterMode = FilterMode.Point;
+        texture.wrapMode = TextureWrapMode.Clamp;
         texture.SetPixels(colorMap);
         texture.Apply();
         return texture;

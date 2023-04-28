@@ -152,7 +152,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 6af3f8151e75d0e4faa4c485358b8110, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  lodDistanceLevels:
+  - lod: 0
+    distance: 128
+  - lod: 1
+    distance: 256
+  - lod: 2
+    distance: 384
   viewer: {fileID: 1766881631}
+  material: {fileID: 2100000, guid: 34641c5a6c53a6249b681063db3ba323, type: 2}
 --- !u!4 &128747327
 Transform:
   m_ObjectHideFlags: 0
@@ -403,7 +411,7 @@ MeshFilter:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1051286527}
-  m_Mesh: {fileID: 1318012915}
+  m_Mesh: {fileID: 1669186460}
 --- !u!23 &1051286529
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -491,7 +499,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   mapType: 3
-  lodIndex: 0
+  editorLodIndex: 0
   octaves: 4
   persistance: 0.5
   lacunarity: 2
@@ -559,7 +567,6 @@ MonoBehaviour:
   - name: Snow
     height: 1
     color: {r: 1, g: 1, b: 1, a: 0}
-  terrainMaterial: {fileID: 2100000, guid: 34641c5a6c53a6249b681063db3ba323, type: 2}
 --- !u!4 &1306701750
 Transform:
   m_ObjectHideFlags: 0
@@ -575,7 +582,7 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!43 &1318012915
+--- !u!43 &1669186460
 Mesh:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
