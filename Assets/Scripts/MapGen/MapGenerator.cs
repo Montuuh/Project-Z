@@ -14,7 +14,7 @@ public class MapGenerator : MonoBehaviour
     public MapTypeGen mapType;
 
     [SerializeField] private const int chunkSize = 129;
-    [Range(0, 3)] public int lodIndex = 0;
+    [Range(0, 3)] public int editorLodIndex = 0;
 
     [Range(1, 10)] public int octaves = 1;
     [Range(0.1f, 1f)] public float persistance = 0.5f;
@@ -70,19 +70,21 @@ public class MapGenerator : MonoBehaviour
         }
     }
 
+    // Methods
+    // This function generates the map data and draws it (only called from editor button)
     public void GenerateMap()
     {
         // This function sets the active map (2D or 3D)
         SetActive();
 
         // Generate map data
-        MapData mapData = GenerateMapData();
+        MapData mapData = GenerateMapData(editorLodIndex);
 
         // Draw map
         DrawMap(mapData);
     }
 
-    private MapData GenerateMapData()
+    private MapData GenerateMapData(int lodIndex)
     {
         // Generate noise map
         float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, scale, octaves, persistance, lacunarity, offset);
@@ -93,7 +95,7 @@ public class MapGenerator : MonoBehaviour
         // Generate mesh data
         MeshData meshData = MeshDataHelper.GenerateTerrainMesh(noiseMap, heightMultiplier, heightCurve, lodIndex);
 
-        return new MapData(noiseMap, colorMap, meshData);
+        return new MapData(noiseMap, colorMap, meshData, lodIndex);
     }
 
     private void DrawMap(MapData mapData)
@@ -150,19 +152,19 @@ public class MapGenerator : MonoBehaviour
     }
 
     // Threading
-    public void RequestMapData(Action<MapData> callback)
+    public void RequestMapData(Action<MapData> callback, int lodIndex)
     {
         ThreadStart threadStart = delegate
         {
-            MapDataThread(callback);
+            MapDataThread(callback, lodIndex);
         };
 
         new Thread(threadStart).Start();
     }
 
-    private void MapDataThread(Action<MapData> callback)
+    private void MapDataThread(Action<MapData> callback, int lodIndex)
     {
-        MapData mapData = GenerateMapData();
+        MapData mapData = GenerateMapData(lodIndex);
         lock (mapDataThreadInfoQueue)
         {
             mapDataThreadInfoQueue.Enqueue(new MapThreadInfo<MapData>(callback, mapData));
@@ -208,12 +210,14 @@ public struct MapData
     public float[,] noiseMap;
     public Color[] colorMap;
     public MeshData meshData;
+    public int lodIndex;
 
-    public MapData(float[,] noiseMap, Color[] colorMap, MeshData meshData)
+    public MapData(float[,] noiseMap, Color[] colorMap, MeshData meshData, int lodIndex)
     {
         this.noiseMap = noiseMap;
         this.colorMap = colorMap;
         this.meshData = meshData;
+        this.lodIndex = lodIndex;
     }
 }
 

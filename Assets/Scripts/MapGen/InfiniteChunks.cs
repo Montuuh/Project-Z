@@ -88,6 +88,7 @@ public class InfiniteChunks : MonoBehaviour
         public Bounds bounds;
         public int chunkSize;
         public int numChunk;
+        public int currentLOD;
 
         private MeshRenderer meshRenderer;
         private MeshFilter meshFilter;
@@ -127,12 +128,18 @@ public class InfiniteChunks : MonoBehaviour
             InfiniteChunks.numChunks++;
 
             // Threading
-            MapGenerator.Instance.RequestMapData(OnMapDataReceived);
+            MapGenerator.Instance.RequestMapData(OnMapDataReceived, currentLOD);
         }
 
         public void UpdateChunk()
         {
             float viewerDistanceFromNearestEdge = Mathf.Sqrt(bounds.SqrDistance(viewerPosition));
+            int lod = Mathf.Min(2, Mathf.FloorToInt(viewerDistanceFromNearestEdge / (maxViewDst / 3f))); // Change the divisor to control LOD transition distance
+            if (currentLOD != lod)
+            {
+                currentLOD = lod;
+                MapGenerator.Instance.RequestMapData(OnMapDataReceived, currentLOD);
+            }
             bool visible = viewerDistanceFromNearestEdge <= maxViewDst;
             SetVisible(visible);
         }
@@ -150,7 +157,7 @@ public class InfiniteChunks : MonoBehaviour
         // Threading
         private void OnMapDataReceived(MapData mapData)
         {
-            Debug.Log("Map data received");
+            Debug.Log("Map data received. Coord = " + coord.x + ", " + coord.y + ", Size = " + chunkSize + ", LOD = " + mapData.lodIndex + ", Thread = " + System.Threading.Thread.CurrentThread.ManagedThreadId);
 
             // Set the mesh
             MeshData meshData = mapData.meshData;
