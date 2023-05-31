@@ -5,7 +5,7 @@ using UnityEngine;
 public static class NoiseGenerator
 {
     // Noise map generation with octaves, persistance and lacunarity
-    public static float[,] GenerateNoiseMap(int chunkSize, float scale, int octaves, float persistance, float lacunarity, Vector2 offset)
+    public static float[,] GenerateNoiseMap(int chunkSize, float scale, int octaves, float persistance, float lacunarity, Vector2 offset, MapGenerator.MapNormalizeMode normalizeMode)
     {
         // Check for invalid values
         if (scale <= 0.3f)
@@ -18,16 +18,12 @@ public static class NoiseGenerator
         float centerX = chunkSize / 2f;
         float centerY = chunkSize / 2f;
 
-        // Min and max noise height
-        float minNoiseHeight = float.MaxValue;
-        float maxNoiseHeight = float.MinValue;
-
         // Octaves offset
         Vector2[] octaveOffsets = new Vector2[octaves];
         for (int i = 0; i < octaves; i++)
         {
             float offsetX = offset.x;
-            float offsetY = offset.y;
+            float offsetY = -offset.y;
             octaveOffsets[i] = new Vector2(offsetX, offsetY);
         }
 
@@ -42,11 +38,12 @@ public static class NoiseGenerator
 
                 for (int i = 0; i < octaves; i++)
                 {
-                    // Sample noise map in noise space
-                    float sampleX = (x - centerX) / scale * frequency + octaveOffsets[i].x;
-                    float sampleY = (y - centerY) / scale * frequency - octaveOffsets[i].y;
+                    // Calculate the normalized coordinates in relation to the center of the chunk
+                    float sampleX = (x - centerX + octaveOffsets[i].x) / scale * frequency;
+                    float sampleY = (y - centerY + octaveOffsets[i].y) / scale * frequency;
 
                     // Calculate periln noise value at sample point given
+                    // Perlin noise returns a value between 0 and 1, so we multiply by 2 and subtract 1 to get a value between -1 and 1
                     float perlinVal = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;
 
                     // Add perlin noise value to total octaves height
@@ -57,28 +54,24 @@ public static class NoiseGenerator
                     frequency *= lacunarity;
                 }
 
-                if (octaveHeight > maxNoiseHeight) {
-					maxNoiseHeight = octaveHeight;
-				} else if (octaveHeight < minNoiseHeight) {
-					minNoiseHeight = octaveHeight;
-				}
-
                 // Assign the final octaves height to the noise map
                 noiseMap[x, y] = octaveHeight;
             }
         }
 
-        for (int y = 0; y < chunkSize; y++) {
-			for (int x = 0; x < chunkSize; x++) {
-				noiseMap [x, y] = Mathf.InverseLerp (minNoiseHeight, maxNoiseHeight, noiseMap [x, y]);
-			}
-		}
-
         // Return normalized noise map
-        return noiseMap;
+        return NormalizeFloatMap(noiseMap, normalizeMode);
     }
 
-    private static float[,] NormalizeFloatMap(float[,] map)
+    private static float[,] NormalizeFloatMap(float[,] map, MapGenerator.MapNormalizeMode normalizeMode)
+    {
+        if (normalizeMode == MapGenerator.MapNormalizeMode.Global)
+            return NormalizeFloatMapGlobal(map);
+        else
+            return NormalizeFloatMapLocal(map);
+    }
+
+    private static float[,] NormalizeFloatMapLocal(float[,] map)
     {
         float minValue = float.MaxValue;
         float maxValue = float.MinValue;
@@ -106,5 +99,26 @@ public static class NoiseGenerator
         }
 
         return normalizedMap;
+    }
+
+    private static float[,] NormalizeFloatMapGlobal(float[,] noiseMap)
+    {
+        int mapWidth = noiseMap.GetLength(0);
+        int mapHeight = noiseMap.GetLength(1);
+
+        float maxPossibleNoiseHeight = 1.0f;
+        float minPossibleNoiseHeight = -1.0f;
+
+        // Normalize the noise map
+        for (int y = 0; y < mapHeight; y++)
+        {
+            for (int x = 0; x < mapWidth; x++)
+            {
+                // Adjusting the noise value to be between 0 and 1
+                noiseMap[x, y] = (noiseMap[x, y] - minPossibleNoiseHeight) / (maxPossibleNoiseHeight - minPossibleNoiseHeight);
+            }
+        }
+
+        return noiseMap;
     }
 }

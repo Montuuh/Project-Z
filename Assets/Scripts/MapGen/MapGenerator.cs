@@ -3,15 +3,19 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Threading;
+using UnityEditor;
 using UnityEngine;
 
 public class MapGenerator : MonoBehaviour
 {
     public static MapGenerator Instance;
 
-    public enum MapTypeGen { Map2D_perlin, Map2D_texture, Map3D_perlin, Map3D_texture }
+    public enum MapTypeGen { Map2D_perlin, Map2D_texture, Map3D_perlin, Map3D_texture, Map3D_Infinite }
+    public enum MapNormalizeMode { Local, Global }
 
     public MapTypeGen mapType;
+    public MapNormalizeMode normalizeMode;
+    public bool autoUpdateEditor;
 
     [SerializeField] private const int chunkSize = 129;
     [SerializeField] private const int mapSize = chunkSize;
@@ -27,9 +31,8 @@ public class MapGenerator : MonoBehaviour
     public AnimationCurve heightCurve;
     public Vector2 offset = new Vector2(0, 0);
 
-    public Renderer texture2DRenderer;
-    public MeshFilter meshFilter;
-    public MeshRenderer meshRenderer;
+    public GameObject local2Dmesh;
+    public GameObject local3Dmesh;
 
     [SerializeField] public TerrainType[] terrainTypes;
 
@@ -37,7 +40,7 @@ public class MapGenerator : MonoBehaviour
     private ConcurrentQueue<MapThreadInfo<MeshData>> meshDataThreadInfoQueue = new ConcurrentQueue<MapThreadInfo<MeshData>>();
 
     // Getters
-    // It is -1 because the map is 129x129 but the chunks should be 128x128 
+    // Chunk size returns -1 because the real chunkSize is 129x129 but the effective chunkSize is 128x128
     public int GetChunkSize() { return chunkSize - 1; }
     public int GetMapSize() { return mapSize; }
 
@@ -88,8 +91,8 @@ public class MapGenerator : MonoBehaviour
     // This function generates the map data and draws it (only called from editor button)
     public void GenerateMap()
     {
-        // This function sets the active map (2D or 3D)
-        SetActive();
+        // This function sets the active map (2D or 3D or Infinite)
+        HandleMap();
 
         // Generate initial map data
         MapData mapData = GenerateMapData(Vector2.zero);
@@ -112,54 +115,59 @@ public class MapGenerator : MonoBehaviour
                 break;
             case MapTypeGen.Map3D_perlin:
                 SetTexture(texture2D);
-                meshFilter.sharedMesh = MeshDataHelper.GenerateTerrainMesh(mapData.noiseMap, heightMultiplier, heightCurve, editorLodIndex).ToMesh();
+                local3Dmesh.GetComponent<MeshFilter>().sharedMesh = MeshDataHelper.GenerateTerrainMesh(mapData.noiseMap, heightMultiplier, heightCurve, editorLodIndex).ToMesh();
                 break;
             case MapTypeGen.Map3D_texture:
                 texture2D = TextureHelper.ColorMapToTexture(mapData.colorMap, chunkSize);
                 SetTexture(texture2D);
-                meshFilter.sharedMesh = MeshDataHelper.GenerateTerrainMesh(mapData.noiseMap, heightMultiplier, heightCurve, editorLodIndex).ToMesh();
+                local3Dmesh.GetComponent<MeshFilter>().sharedMesh = MeshDataHelper.GenerateTerrainMesh(mapData.noiseMap, heightMultiplier, heightCurve, editorLodIndex).ToMesh();
                 break;
         }
     }
 
-    private void SetActive()
+    private void HandleMap()
     {
         switch (mapType)
         {
             case MapTypeGen.Map2D_perlin:
             case MapTypeGen.Map2D_texture:
-                texture2DRenderer.gameObject.SetActive(true);
-                meshFilter.gameObject.SetActive(false);
+                local2Dmesh.gameObject.SetActive(true);
+                local3Dmesh.SetActive(false);
                 break;
             case MapTypeGen.Map3D_perlin:
             case MapTypeGen.Map3D_texture:
-                texture2DRenderer.gameObject.SetActive(false);
-                meshFilter.gameObject.SetActive(true);
+                local2Dmesh.gameObject.SetActive(false);
+                local3Dmesh.SetActive(true);
+                break;
+            case MapTypeGen.Map3D_Infinite:
+                local2Dmesh.gameObject.SetActive(false);
+                local3Dmesh.SetActive(false);
+
+#if UNITY_EDITOR
+                EditorApplication.isPlaying = true;
+#endif
                 break;
         }
     }
 
     private void SetTexture(Texture2D texture)
     {
-        texture2DRenderer.sharedMaterial.mainTexture = texture;
-        texture2DRenderer.transform.localScale = new Vector3(texture.width, 1, texture.height);
         texture.wrapMode = TextureWrapMode.Clamp;
         texture.filterMode = FilterMode.Point;
 
-        meshRenderer.sharedMaterial.mainTexture = texture;
-        meshRenderer.sharedMaterial.mainTexture.wrapMode = TextureWrapMode.Clamp;
-        meshRenderer.sharedMaterial.mainTexture.filterMode = FilterMode.Point;
+        local2Dmesh.GetComponent<MeshRenderer>().sharedMaterial.mainTexture = texture;
+        local2Dmesh.transform.localScale = new Vector3(texture.width, 1, texture.height);
+
+        local3Dmesh.GetComponent<MeshRenderer>().sharedMaterial.mainTexture = texture;
     }
 
     private MapData GenerateMapData(Vector2 chunkOffset)
     {
         // Generate noise map
-        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, scale, octaves, persistance, lacunarity, offset + chunkOffset);
+        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, scale, octaves, persistance, lacunarity, offset + chunkOffset, normalizeMode);
 
-        // Generate color map
+        // Generate color map from terrain types
         Color[] colorMap = TextureHelper.GetColorMapFromNoiseMap(noiseMap, terrainTypes);
-        
-        // Color[] colorMap = TextureHelper.GetColorMapFromNoiseMap(noiseMap);
 
         return new MapData(noiseMap, colorMap);
     }

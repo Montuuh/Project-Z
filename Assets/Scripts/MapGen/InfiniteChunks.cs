@@ -20,7 +20,7 @@ public class InfiniteChunks : MonoBehaviour
     private const float sqrViewerMoveThresholdForChunkUpdate = 25f;
 
     private Dictionary<Vector2, Chunk> chunkDictionary = new Dictionary<Vector2, Chunk>();
-    private List<Chunk> chunksVisibleLastUpdate = new List<Chunk>();
+    private static List<Chunk> chunksVisibleLastUpdate = new List<Chunk>();
     
     public Material material;
 
@@ -87,8 +87,6 @@ public class InfiniteChunks : MonoBehaviour
                 if (chunkDictionary.ContainsKey(viewedChunkCoord))
                 {
                     chunkDictionary[viewedChunkCoord].UpdateChunk();
-                    if (chunkDictionary[viewedChunkCoord].IsVisible())
-                        chunksVisibleLastUpdate.Add(chunkDictionary[viewedChunkCoord]);
                 }
                 else
                 {
@@ -186,6 +184,8 @@ public class InfiniteChunks : MonoBehaviour
 							lodMesh.RequestMesh (mapData);
 						}
 					}
+
+                    chunksVisibleLastUpdate.Add (this);
 				}
 
 				SetVisible (visible);
