@@ -14,6 +14,7 @@ public class MapGenerator : MonoBehaviour
     public MapTypeGen mapType;
 
     [SerializeField] private const int chunkSize = 129;
+    [SerializeField] private const int mapSize = chunkSize;
     [Range(0, 3)] public int editorLodIndex = 0;
 
     [Range(1, 10)] public int octaves = 1;
@@ -38,6 +39,7 @@ public class MapGenerator : MonoBehaviour
     // Getters
     // It is -1 because the map is 129x129 but the chunks should be 128x128 
     public int GetChunkSize() { return chunkSize - 1; }
+    public int GetMapSize() { return mapSize; }
 
 
     // Unity Methods
@@ -89,7 +91,7 @@ public class MapGenerator : MonoBehaviour
         // This function sets the active map (2D or 3D)
         SetActive();
 
-        // Generate map data
+        // Generate initial map data
         MapData mapData = GenerateMapData(Vector2.zero);
 
         // Draw map
@@ -156,6 +158,8 @@ public class MapGenerator : MonoBehaviour
 
         // Generate color map
         Color[] colorMap = TextureHelper.GetColorMapFromNoiseMap(noiseMap, terrainTypes);
+        
+        // Color[] colorMap = TextureHelper.GetColorMapFromNoiseMap(noiseMap);
 
         return new MapData(noiseMap, colorMap);
     }

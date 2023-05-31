@@ -32,7 +32,7 @@ public static class TextureHelper
         return ColorMapToTexture(colorMap, chunkSize);
     }
 
-    // This function transforms a noise map into a basic color map array
+    // This function transforms a noise map into a basic color map array depending on the terrain types
     public static Color[] GetColorMapFromNoiseMap(float[,] noiseMap, TerrainType[] terrainTypes)
     {
         int chunkSize = noiseMap.GetLength(0);
@@ -51,6 +51,23 @@ public static class TextureHelper
                         break;
                     }
                 }
+            }
+        }
+
+        return colorMap;
+    }
+
+    // This function transforms a noise map into a basic black and white color map array
+    public static Color[] GetColorMapFromNoiseMap(float[,] noiseMap)
+    {
+        int chunkSize = noiseMap.GetLength(0);
+
+        Color[] colorMap = new Color[chunkSize * chunkSize];
+        for (int y = 0; y < chunkSize; y++)
+        {
+            for (int x = 0; x < chunkSize; x++)
+            {
+                colorMap[y * chunkSize + x] = Color.Lerp(Color.black, Color.white, noiseMap[x, y]);
             }
         }
 

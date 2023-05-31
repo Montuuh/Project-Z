@@ -211,8 +211,8 @@ public class InfiniteChunks : MonoBehaviour
             mapDataReceived = true;
 
             // Set the texture
-            // Texture2D texture = TextureHelper.ColorMapToTexture(mapData.colorMap, chunkSize);
-            // meshRenderer.material.mainTexture = texture;
+            Texture2D texture = TextureHelper.ColorMapToTexture(mapData.colorMap, MapGenerator.Instance.GetMapSize());
+            meshRenderer.material.mainTexture = texture;
 
             UpdateChunk();
         }
