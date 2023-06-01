@@ -5,12 +5,8 @@ using UnityEngine;
 public static class NoiseGenerator
 {
     // Noise map generation with octaves, persistance and lacunarity
-    public static float[,] GenerateNoiseMap(int chunkSize, float scale, int octaves, float persistance, float lacunarity, Vector2 offset, MapGenerator.MapNormalizeMode normalizeMode)
+    public static float[,] GenerateNoiseMap(int chunkSize, float scale, int octaves, float persistance, float lacunarity, Vector2 offset, MapGenerator.MapNormalizeMode normalizeMode, int seed)
     {
-        // Check for invalid values
-        if (scale <= 0.3f)
-            scale = 0.3f;
-
         // Create noise map array
         float[,] noiseMap = new float[chunkSize, chunkSize];
 
@@ -18,12 +14,17 @@ public static class NoiseGenerator
         float centerX = chunkSize / 2f;
         float centerY = chunkSize / 2f;
 
+        // Seed random offset. 
+        // A number of parameter is used to generate the same noise map, so if the are two seeds with same number, the noise map will be the same
+        System.Random prng = new System.Random(seed);
+
         // Octaves offset
         Vector2[] octaveOffsets = new Vector2[octaves];
         for (int i = 0; i < octaves; i++)
         {
-            float offsetX = offset.x;
-            float offsetY = -offset.y;
+            // The random offset is between -100000 and 100000
+            float offsetX = offset.x + prng.Next(-100000, 100000);
+            float offsetY = -offset.y + prng.Next(-100000, 100000);
             octaveOffsets[i] = new Vector2(offsetX, offsetY);
         }
 

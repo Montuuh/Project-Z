@@ -25,7 +25,9 @@ public class MapGenerator : MonoBehaviour
     [Range(0.1f, 1f)] public float persistance = 0.5f;
     [Range(1f, 10f)] public float lacunarity = 2f;
 
-    [Range(0.3f, 100f)] public float scale = 0.3f;
+    [Range(5f, 100f)] public float scale = 5f;
+    
+    [Range(0, 100000)] public int seed = 0;
 
     [Range(0.5f, 50f)] public float heightMultiplier = 1f;
     public AnimationCurve heightCurve;
@@ -164,7 +166,7 @@ public class MapGenerator : MonoBehaviour
     private MapData GenerateMapData(Vector2 chunkOffset)
     {
         // Generate noise map
-        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, scale, octaves, persistance, lacunarity, offset + chunkOffset, normalizeMode);
+        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, scale, octaves, persistance, lacunarity, offset + chunkOffset, normalizeMode, seed);
 
         // Generate color map from terrain types
         Color[] colorMap = TextureHelper.GetColorMapFromNoiseMap(noiseMap, terrainTypes);
