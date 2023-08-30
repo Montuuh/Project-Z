@@ -4,8 +4,6 @@ using UnityEngine;
 
 public class InfiniteChunks : MonoBehaviour
 {
-    public static InfiniteChunks Instance { get; private set; }
-
     public LODDistance[] lodDistanceLevels;
     private static float maxViewDst;
 
@@ -17,21 +15,25 @@ public class InfiniteChunks : MonoBehaviour
     public Transform viewer;
     private static Vector2 viewerPosition;
     private static Vector2 viewerPositionOld;
+    private static Vector2Int viewerChunkCoord;
     private const float sqrViewerMoveThresholdForChunkUpdate = 25f;
 
-    private const float chunkScale = 5.0f;
+    private const float chunkScale = 1.0f;
 
     private Dictionary<Vector2, Chunk> chunkDictionary = new Dictionary<Vector2, Chunk>();
     private static List<Chunk> chunksVisibleLastUpdate = new List<Chunk>();
     
     public Material material;
 
+    // Events
+    public static event System.Action<Vector2Int> OnChunkCoordChanged;
+
     // Getters and Setters
 
     // Unity Methods
     private void Awake()
     {
-        Instance = this;
+        
     }
 
     private void Start()
@@ -48,10 +50,14 @@ public class InfiniteChunks : MonoBehaviour
         // Set the chunk holder to the parent of the chunks
         chunkHolder = this.transform;
 
+        // Initial Chunk coordinates
+        Vector2Int currentChunkCoord = GetCurrentChunkCoord();
+        OnChunkCoordChanged?.Invoke(currentChunkCoord);
+
         UpdateVisibleChunks();
     }
 
-    void Update()
+    private void Update()
     {
         // We have to divide by the scale because the viewer position is in world coordinates and the chunk position is in chunk coordinates
         viewerPosition = new Vector2(viewer.position.x, viewer.position.z) / chunkScale;
@@ -62,10 +68,18 @@ public class InfiniteChunks : MonoBehaviour
             viewerPositionOld = viewerPosition;
             UpdateVisibleChunks();
         }
+
+        // ChunkCoord management
+        Vector2Int currentChunkCoord = GetCurrentChunkCoord();
+        if (currentChunkCoord != viewerChunkCoord)
+        {
+            viewerChunkCoord = currentChunkCoord;
+            OnChunkCoordChanged?.Invoke(viewerChunkCoord);
+        }
     }
 
     // Methods
-    void UpdateVisibleChunks()
+    private void UpdateVisibleChunks()
     {
         // Set all the chunks visible last update to invisible
         for (int i = 0; i < chunksVisibleLastUpdate.Count; i++)
@@ -98,6 +112,11 @@ public class InfiniteChunks : MonoBehaviour
                 }
             }
         }
+    }
+
+    private Vector2Int GetCurrentChunkCoord()
+    {
+        return new Vector2Int(Mathf.RoundToInt(viewerPosition.x / chunkSize), Mathf.RoundToInt(viewerPosition.y / chunkSize));
     }
 
 

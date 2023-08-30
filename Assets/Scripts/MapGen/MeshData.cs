@@ -42,8 +42,64 @@ public class MeshData
         mesh.vertices = vertices;
         mesh.triangles = triangles;
         mesh.uv = uvs;
-        mesh.RecalculateNormals();
+        //mesh.RecalculateNormals();
+        mesh.normals = CalculateNormals();
         return mesh;
+    }
+
+    // Calculate our own normals because Unity's RecalculateNormals() function does not work well with vertex seams
+    private Vector3[] CalculateNormals()
+    {
+        Vector3[] vertexNormals = new Vector3[vertices.Length];
+
+        // Calculate the normals of each triangle
+        int triangleCount = triangles.Length / 3;
+        for (int i = 0; i < triangleCount; i++)
+        {
+            // Get the indices of the vertices of the triangle
+            int normalTriangleIndex = i * 3; // Start at i * 3 because we have 3 vertices per triangle
+            int vertexIndexA = triangles[normalTriangleIndex];
+            int vertexIndexB = triangles[normalTriangleIndex + 1];
+            int vertexIndexC = triangles[normalTriangleIndex + 2];
+
+            // Get the vertices of the triangle
+            Vector3 triangleVertexA = vertices[vertexIndexA];
+            Vector3 triangleVertexB = vertices[vertexIndexB];
+            Vector3 triangleVertexC = vertices[vertexIndexC];
+
+            // Calculate the normal of the triangle
+            Vector3 triangleNormal = TriangleNormalFromVertices(triangleVertexA, triangleVertexB, triangleVertexC);
+
+            // Set the normals of the triangle
+            vertexNormals[vertexIndexA] += triangleNormal;
+            vertexNormals[vertexIndexB] += triangleNormal;
+            vertexNormals[vertexIndexC] += triangleNormal;
+        }
+
+        // Normalize the normals
+        for (int i = 0; i < vertexNormals.Length; i++)
+        {
+            vertexNormals[i].Normalize();
+        }
+
+        return vertexNormals;
+    }
+
+    private Vector3 TriangleNormalFromVertices(Vector3 vertexA, Vector3 vertexB, Vector3 vertexC)
+    {
+        Vector3 triangleNormal = Vector3.zero;
+
+        // Get the vectors AB and AC of the triangle
+        Vector3 vectorAB = vertexB - vertexA;
+        Vector3 vectorAC = vertexC - vertexA;
+
+        // Calculate the cross product of AB and AC to get the normal of the triangle
+        triangleNormal = Vector3.Cross(vectorAB, vectorAC);
+
+        // Normalize the normal vector
+        triangleNormal.Normalize();
+
+        return triangleNormal;
     }
 }
 

@@ -5,6 +5,7 @@ using UnityEngine;
 public class HUDManager : MonoBehaviour
 {
     public TMPro.TextMeshProUGUI fpsText;
+    public TMPro.TextMeshProUGUI chunkCoord;
 
     [SerializeField] private float updateInterval = 0.5f;
 
@@ -12,9 +13,21 @@ public class HUDManager : MonoBehaviour
     private int fpsFrames = 0;
     private float fpsTimeLeft = 0f;
 
+    private void Awake()
+    {
+        // Events
+        InfiniteChunks.OnChunkCoordChanged += UpdateChunkCoordText;
+    }
+
     private void Start()
     {
         fpsTimeLeft = updateInterval;
+    }
+
+    private void OnDestroy()
+    {
+        // Events
+        InfiniteChunks.OnChunkCoordChanged -= UpdateChunkCoordText;
     }
 
     void Update()
@@ -31,5 +44,10 @@ public class HUDManager : MonoBehaviour
             fpsAccumulator = 0f;
             fpsFrames = 0;
         }
+    }
+
+    private void UpdateChunkCoordText(Vector2Int coord)
+    {
+        chunkCoord.text = $"Chunk: {coord.x}, {coord.y}";
     }
 }
