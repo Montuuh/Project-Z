@@ -43,7 +43,19 @@ public static class TextureHelper
             for (int x = 0; x < chunkSize; x++)
             {
                 float currentHeight = noiseMap[x, y];
-                for (int i = 0; i < terrainTypes.Length; i++)
+
+                // Boundaries
+                if (currentHeight < 0) // Heights less than 0
+                {
+                    colorMap[y * chunkSize + x] = terrainTypes[0].Color;
+                    continue;
+                }
+                else if (currentHeight > 1) // Heights greater than 1
+                {
+                    colorMap[y * chunkSize + x] = terrainTypes[terrainTypes.Length - 1].Color;
+                    continue;
+                }
+                for (int i = 0; i < terrainTypes.Length; i++) // Heights between 0 and 1
                 {
                     if (currentHeight <= terrainTypes[i].Height)
                     {

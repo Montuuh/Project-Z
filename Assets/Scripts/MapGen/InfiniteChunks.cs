@@ -19,6 +19,8 @@ public class InfiniteChunks : MonoBehaviour
     private static Vector2 viewerPositionOld;
     private const float sqrViewerMoveThresholdForChunkUpdate = 25f;
 
+    private const float chunkScale = 5.0f;
+
     private Dictionary<Vector2, Chunk> chunkDictionary = new Dictionary<Vector2, Chunk>();
     private static List<Chunk> chunksVisibleLastUpdate = new List<Chunk>();
     
@@ -51,7 +53,8 @@ public class InfiniteChunks : MonoBehaviour
 
     void Update()
     {
-        viewerPosition = new Vector2(viewer.position.x, viewer.position.z);
+        // We have to divide by the scale because the viewer position is in world coordinates and the chunk position is in chunk coordinates
+        viewerPosition = new Vector2(viewer.position.x, viewer.position.z) / chunkScale;
 
         // If the viewer has moved more than the threshold, update the chunks
         if ((viewerPositionOld - viewerPosition).sqrMagnitude > sqrViewerMoveThresholdForChunkUpdate)
@@ -137,8 +140,9 @@ public class InfiniteChunks : MonoBehaviour
             this.bounds = new Bounds(position, Vector2.one * chunkSize);
 
             meshObject = new GameObject("Chunk " + numChunk + ": " + this.coord.x + ", " + this.coord.y);
-            meshObject.transform.position = positionV3;
+            meshObject.transform.position = positionV3 * chunkScale;
             meshObject.transform.parent = parent;
+            meshObject.transform.localScale = Vector3.one * chunkScale;
 
             meshRenderer = meshObject.AddComponent<MeshRenderer>();
             meshFilter = meshObject.AddComponent<MeshFilter>();

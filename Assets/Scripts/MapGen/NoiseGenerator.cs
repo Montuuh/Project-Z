@@ -4,9 +4,15 @@ using UnityEngine;
 
 public static class NoiseGenerator
 {
+    private static int _octaves = 1;
+    private static float _persistance = 1.0f;
+
     // Noise map generation with octaves, persistance and lacunarity
     public static float[,] GenerateNoiseMap(int chunkSize, float scale, int octaves, float persistance, float lacunarity, Vector2 offset, MapGenerator.MapNormalizeMode normalizeMode, int seed)
     {
+        _octaves = octaves;
+        _persistance = persistance;
+
         // Create noise map array
         float[,] noiseMap = new float[chunkSize, chunkSize];
 
@@ -43,7 +49,7 @@ public static class NoiseGenerator
                     float sampleX = (x - centerX + octaveOffsets[i].x) / scale * frequency;
                     float sampleY = (y - centerY + octaveOffsets[i].y) / scale * frequency;
 
-                    // Calculate periln noise value at sample point given
+                    // Calculate perlin noise value at sample point given
                     // Perlin noise returns a value between 0 and 1, so we multiply by 2 and subtract 1 to get a value between -1 and 1
                     float perlinVal = Mathf.PerlinNoise(sampleX, sampleY) * 2 - 1;
 
