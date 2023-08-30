@@ -1,53 +1,46 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class HUDManager : MonoBehaviour
 {
-    public TMPro.TextMeshProUGUI fpsText;
-    public TMPro.TextMeshProUGUI chunkCoord;
+    private ExtraHUD extraHUD;
+    private ChunkCoordInfo chunkCoordInfo;
 
-    [SerializeField] private float updateInterval = 0.5f;
-
-    private float fpsAccumulator = 0f;
-    private int fpsFrames = 0;
-    private float fpsTimeLeft = 0f;
-
+    // Event system
     private void Awake()
     {
-        // Events
-        InfiniteChunks.OnChunkCoordChanged += UpdateChunkCoordText;
-    }
+        InfiniteChunks.OnChunkCoordChanged += UpdateChunkCoordInfo;
+        InputManager.OnToggleExtraHUD += ToggleExtraHUD;
 
-    private void Start()
-    {
-        fpsTimeLeft = updateInterval;
+        extraHUD = GameObject.Find("ExtraHUD").GetComponent<ExtraHUD>();
+        chunkCoordInfo = GameObject.Find("ChunkCoordInfo").GetComponent<ChunkCoordInfo>();
     }
-
     private void OnDestroy()
     {
-        // Events
-        InfiniteChunks.OnChunkCoordChanged -= UpdateChunkCoordText;
+        InfiniteChunks.OnChunkCoordChanged -= UpdateChunkCoordInfo;
+        InputManager.OnToggleExtraHUD -= ToggleExtraHUD;
     }
 
-    void Update()
+    private void UpdateChunkCoordInfo(Vector2Int coord)
     {
-        fpsTimeLeft -= Time.deltaTime;
-        fpsAccumulator += Time.timeScale / Time.deltaTime;
-        fpsFrames++;
-
-        if (fpsTimeLeft <= 0f)
+        if (chunkCoordInfo != null)
         {
-            float currentFPS = fpsAccumulator / fpsFrames;
-            fpsText.text = $"FPS: {currentFPS:0.}";
-            fpsTimeLeft = updateInterval;
-            fpsAccumulator = 0f;
-            fpsFrames = 0;
+            chunkCoordInfo.UpdateChunkCoordInfo(coord);
+        }
+        else
+        {
+            Debug.LogError("ChunkCoordInfo is null");
         }
     }
 
-    private void UpdateChunkCoordText(Vector2Int coord)
+    private void ToggleExtraHUD()
     {
-        chunkCoord.text = $"Chunk: {coord.x}, {coord.y}";
+        if (extraHUD != null)
+        {
+            extraHUD.ToggleExtraHUD();
+        }
+        else
+        {
+            Debug.LogError("ExtraHUD is null");
+        }
     }
 }
