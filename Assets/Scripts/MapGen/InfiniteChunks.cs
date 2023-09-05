@@ -203,7 +203,8 @@ public class InfiniteChunks : MonoBehaviour
 						if (lodMesh.hasMesh) {
 							previousLOD = lodIndex;
 							meshFilter.mesh = lodMesh.mesh;
-						} else if (!lodMesh.hasRequestedMesh) {
+                            meshCollider.sharedMesh = lodMesh.mesh;
+                        } else if (!lodMesh.hasRequestedMesh) {
 							lodMesh.RequestMesh (mapData);
 						}
 					}

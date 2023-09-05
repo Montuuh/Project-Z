@@ -5,9 +5,9 @@ public class HUDManager : MonoBehaviour
     private ExtraHUD extraHUD;
     private ChunkCoordInfo chunkCoordInfo;
 
-    // Event system
     private void Awake()
     {
+        // Event system
         InfiniteChunks.OnChunkCoordChanged += UpdateChunkCoordInfo;
         InputManager.OnToggleExtraHUD += ToggleExtraHUD;
 

@@ -47,30 +47,21 @@ public class MeshData
         return mesh;
     }
 
-    // Calculate our own normals because Unity's RecalculateNormals() function does not work well with vertex seams
+    // Calculate our own normals to handle vertex seams better
     private Vector3[] CalculateNormals()
     {
         Vector3[] vertexNormals = new Vector3[vertices.Length];
-
-        // Calculate the normals of each triangle
         int triangleCount = triangles.Length / 3;
+
         for (int i = 0; i < triangleCount; i++)
         {
-            // Get the indices of the vertices of the triangle
-            int normalTriangleIndex = i * 3; // Start at i * 3 because we have 3 vertices per triangle
+            int normalTriangleIndex = i * 3;
             int vertexIndexA = triangles[normalTriangleIndex];
             int vertexIndexB = triangles[normalTriangleIndex + 1];
             int vertexIndexC = triangles[normalTriangleIndex + 2];
 
-            // Get the vertices of the triangle
-            Vector3 triangleVertexA = vertices[vertexIndexA];
-            Vector3 triangleVertexB = vertices[vertexIndexB];
-            Vector3 triangleVertexC = vertices[vertexIndexC];
+            Vector3 triangleNormal = TriangleNormalFromVertices(vertices[vertexIndexA], vertices[vertexIndexB], vertices[vertexIndexC]);
 
-            // Calculate the normal of the triangle
-            Vector3 triangleNormal = TriangleNormalFromVertices(triangleVertexA, triangleVertexB, triangleVertexC);
-
-            // Set the normals of the triangle
             vertexNormals[vertexIndexA] += triangleNormal;
             vertexNormals[vertexIndexB] += triangleNormal;
             vertexNormals[vertexIndexC] += triangleNormal;

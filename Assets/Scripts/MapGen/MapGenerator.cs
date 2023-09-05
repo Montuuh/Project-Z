@@ -50,7 +50,15 @@ public class MapGenerator : MonoBehaviour
     // Unity Methods
     public void Awake()
     {
-        Instance = this;
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else if (Instance != this)
+        {
+            Debug.LogError("More than one MapGenerator in scene!");
+            Destroy(this);
+        }
     }
 
     public void Start()
@@ -188,10 +196,9 @@ public class MapGenerator : MonoBehaviour
     void MapDataThread(Action<MapData> callback, Vector2 chunkOffset)
     {
         MapData mapData = GenerateMapData(chunkOffset);
-        lock (mapDataThreadInfoQueue)
-        {
-            mapDataThreadInfoQueue.Enqueue(new MapThreadInfo<MapData>(callback, mapData));
-        }
+
+        // Using concurrent queues, lock is not needed because it is thread safe
+        mapDataThreadInfoQueue.Enqueue(new MapThreadInfo<MapData>(callback, mapData));
     }
 
     public void RequestMeshData(Action<MeshData> callback, MapData mapData, int lod)
@@ -207,10 +214,9 @@ public class MapGenerator : MonoBehaviour
     void MeshDataThread(Action<MeshData> callback, MapData mapData, int lod)
     {
         MeshData meshData = MeshDataHelper.GenerateTerrainMesh(mapData.noiseMap, heightMultiplier, heightCurve, lod);
-        lock (meshDataThreadInfoQueue)
-        {
-            meshDataThreadInfoQueue.Enqueue(new MapThreadInfo<MeshData>(callback, meshData));
-        }
+
+        // Using concurrent queues, lock is not needed because it is thread safe
+        meshDataThreadInfoQueue.Enqueue(new MapThreadInfo<MeshData>(callback, meshData));
     }
 
     // Structs & Classes
