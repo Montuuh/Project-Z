@@ -2,14 +2,20 @@ using UnityEngine;
 
 public class AnimatorManager : MonoBehaviour
 {
-    // Singleton
-    Animator animator;
-
+    // Singleton pattern
+    public static AnimatorManager instance;
+    
+    private Animator animator;
     private int horizontal;
     private int vertical;
 
     private void Awake()
     {
+        if (instance != null)
+            Destroy(this);
+        else
+            instance = this;
+        
         animator = GetComponent<Animator>();
 
         // We can now reference the animator values with this integers

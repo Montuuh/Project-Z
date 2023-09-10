@@ -3,6 +3,9 @@ using UnityEngine;
 
 public class InputManager : MonoBehaviour
 {
+    // Singleton pattern
+    public static InputManager instance;
+    
     // Input controls
     PlayerControls playerControls;
     DebugKeys debugKeys;
@@ -23,6 +26,11 @@ public class InputManager : MonoBehaviour
 
     private void Awake()
     {
+        if (instance != null)
+            Destroy(this);
+        else
+            instance = this;
+        
         animatorManager = GetComponent<AnimatorManager>();
     }
 

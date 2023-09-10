@@ -4,10 +4,11 @@ using UnityEngine;
 
 public class PlayerManager : MonoBehaviour
 {
-    // Singleton
-    private InputManager inputManager;
+    // Singleton pattern
+    public static PlayerManager instance;
+
     private PlayerLocomotion playerLocomotion;
-    
+
     [Header("Player Flags")]
     [SerializeField] private bool isInteracting;
     [SerializeField] private bool isSprinting;
@@ -18,18 +19,27 @@ public class PlayerManager : MonoBehaviour
     
     private void Awake()
     {
-        inputManager = GetComponent<InputManager>();
+        if (instance != null)
+            Destroy(this);
+        else
+            instance = this;
+
         playerLocomotion = GetComponent<PlayerLocomotion>();
     }
 
     private void Update()
     {
-        inputManager.HandleAllInputs();
-        playerLocomotion.HandleAllLocomotion();
+        InputManager.instance.HandleAllInputs();
     }
 
     // We use FixedUpdate because we are using Rigidbody physics
     private void FixedUpdate()
     {
+        playerLocomotion.HandleAllLocomotion();
+    }
+
+    private void LateUpdate()
+    {
+        //CameraManager.instance.FollowTarget();
     }
 }
