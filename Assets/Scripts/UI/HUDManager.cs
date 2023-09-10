@@ -24,6 +24,7 @@ public class HUDManager : MonoBehaviour
     {
         if (chunkCoordInfo != null)
         {
+            Debug.Log("Updating chunk coord info" + coord);
             chunkCoordInfo.UpdateChunkCoordInfo(coord);
         }
         else

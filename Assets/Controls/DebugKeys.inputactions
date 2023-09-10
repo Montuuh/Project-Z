@@ -1,0 +1,34 @@
+{
+    "name": "DebugKeys",
+    "maps": [
+        {
+            "name": "ExtraHUD",
+            "id": "6af5b21f-fd9a-4c97-b6d3-bba7244720a3",
+            "actions": [
+                {
+                    "name": "Toggle",
+                    "type": "Button",
+                    "id": "4017f790-e0c5-40eb-acc7-6543b7246e69",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": true
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "11325bfc-3d64-417e-9808-fd30c441bba0",
+                    "path": "<Keyboard>/f1",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Toggle",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
+        }
+    ],
+    "controlSchemes": []
+}

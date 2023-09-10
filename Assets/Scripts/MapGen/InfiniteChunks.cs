@@ -29,7 +29,12 @@ public class InfiniteChunks : MonoBehaviour
     public static event System.Action<Vector2Int> OnChunkCoordChanged;
 
     // Getters and Setters
-
+    private void SetCurrentCoords(Vector2Int newCoords)
+    {
+        viewerChunkCoord = newCoords;
+        OnChunkCoordChanged?.Invoke(newCoords);
+    }
+    
     // Unity Methods
     private void Awake()
     {
@@ -51,8 +56,7 @@ public class InfiniteChunks : MonoBehaviour
         chunkHolder = this.transform;
 
         // Initial Chunk coordinates
-        Vector2Int currentChunkCoord = GetCurrentChunkCoord();
-        OnChunkCoordChanged?.Invoke(currentChunkCoord);
+        SetCurrentCoords(GetCurrentChunkCoord(viewer.position));
 
         UpdateVisibleChunks();
     }
@@ -70,11 +74,10 @@ public class InfiniteChunks : MonoBehaviour
         }
 
         // ChunkCoord management
-        Vector2Int currentChunkCoord = GetCurrentChunkCoord();
+        Vector2Int currentChunkCoord = GetCurrentChunkCoord(viewer.position);
         if (currentChunkCoord != viewerChunkCoord)
         {
-            viewerChunkCoord = currentChunkCoord;
-            OnChunkCoordChanged?.Invoke(viewerChunkCoord);
+            SetCurrentCoords(currentChunkCoord);
         }
     }
 
@@ -114,9 +117,9 @@ public class InfiniteChunks : MonoBehaviour
         }
     }
 
-    private Vector2Int GetCurrentChunkCoord()
+    private Vector2Int GetCurrentChunkCoord(Vector3 position)
     {
-        return new Vector2Int(Mathf.RoundToInt(viewerPosition.x / chunkSize), Mathf.RoundToInt(viewerPosition.y / chunkSize));
+        return new Vector2Int(Mathf.RoundToInt(position.x / chunkSize), Mathf.RoundToInt(position.z / chunkSize));
     }
 
 
@@ -229,7 +232,7 @@ public class InfiniteChunks : MonoBehaviour
         // Threading
         private void OnMapDataReceived(MapData mapData)
         {
-            Debug.Log("Map data received. Coord = " + coord.x + ", " + coord.y + ", Thread = " + System.Threading.Thread.CurrentThread.ManagedThreadId);
+            //Debug.Log("Map data received. Coord = " + coord.x + ", " + coord.y + ", Thread = " + System.Threading.Thread.CurrentThread.ManagedThreadId);
 
             this.mapData = mapData;
             mapDataReceived = true;
