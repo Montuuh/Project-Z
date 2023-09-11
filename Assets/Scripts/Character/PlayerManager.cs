@@ -9,16 +9,14 @@ public class PlayerManager : MonoBehaviour
         Idle,
         Walking,
         Running,
-        Sprinting
+        Sprinting,
+        Falling
     }
 
     private PlayerLocomotion playerLocomotion;
 
     [Header("Player Flags")]
-    //[SerializeField] public bool isWalking;
-    //[SerializeField] public bool isSprinting;
     //[SerializeField] private bool isInteracting;
-    //[SerializeField] private bool isFalling;
     //[SerializeField] private bool isAttacking;
     [SerializeField] private bool isGrounded;
     [SerializeField] public PlayerState playerState;
@@ -52,7 +50,11 @@ public class PlayerManager : MonoBehaviour
             playerState = PlayerState.Idle;
         }
 
+        if (!isGrounded)
+            playerState = PlayerState.Falling;
+
         AnimatorManager.instance.UpdateAnimatorValues(0, moveInputAmount, playerState);
+        AnimatorManager.instance.UpdateIsFalling(!isGrounded);
     }
 
     // We use FixedUpdate because we are using Rigidbody physics
@@ -69,12 +71,16 @@ public class PlayerManager : MonoBehaviour
     private void OnCollisionStay(Collision collision)
     {
         if (collision.gameObject.CompareTag("Terrain"))
+        {
             isGrounded = true;
+        }
     }
 
     private void OnCollisionExit(Collision collision)
     {
         if (collision.gameObject.CompareTag("Terrain"))
+        {
             isGrounded = false;
+        }
     }
 }

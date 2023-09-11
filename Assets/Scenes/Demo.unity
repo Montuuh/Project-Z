@@ -285,7 +285,7 @@ GameObject:
   - component: {fileID: 44567082}
   m_Layer: 0
   m_Name: Cube (2)
-  m_TagString: Untagged
+  m_TagString: Terrain
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -298,8 +298,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 44567080}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.96, y: -1.8400002, z: -5.68}
-  m_LocalScale: {x: 12.273942, y: 11.153, z: 2.5518}
+  m_LocalPosition: {x: -2.96, y: -1.8400002, z: -12.17}
+  m_LocalScale: {x: 12.273942, y: 11.153, z: 16.366734}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 361924357}
@@ -2357,15 +2357,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6019155740863995945, guid: 2c61449751be26b459482d85067eadb7, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: -3.37
       objectReference: {fileID: 0}
     - target: {fileID: 6019155740863995945, guid: 2c61449751be26b459482d85067eadb7, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 3.45
+      value: 31.3
       objectReference: {fileID: 0}
     - target: {fileID: 6019155740863995945, guid: 2c61449751be26b459482d85067eadb7, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -7.63
       objectReference: {fileID: 0}
     - target: {fileID: 6019155740863995945, guid: 2c61449751be26b459482d85067eadb7, type: 3}
       propertyPath: m_LocalRotation.w

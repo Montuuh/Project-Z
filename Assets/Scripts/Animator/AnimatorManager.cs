@@ -69,4 +69,9 @@ public class AnimatorManager : MonoBehaviour
         animator.SetFloat(horizontal, snappedHorizontal, 0.1f, Time.deltaTime);
         animator.SetFloat(vertical, snappedVertical, 0.1f, Time.deltaTime);
     }
+
+    public void UpdateIsFalling(bool isFalling)
+    {
+        animator.SetBool("isFalling", isFalling);
+    }
 }
