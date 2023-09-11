@@ -41,7 +41,7 @@ public class ThirdPersonController : MonoBehaviour
 
     private void Update()
     {
-        transform.position += new Vector3(0, 0, 0.05f); // This should move the GameObject forward
+        //transform.position += new Vector3(0, 0, 0.05f); // This should move the GameObject forward
         
         // Handle input and movement
         float horizontal = Input.GetAxis("Horizontal");

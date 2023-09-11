@@ -2770,7 +2770,10 @@ MonoBehaviour:
   movementInput: {x: 0, y: 0}
   verticalInput: 0
   horizontalInput: 0
-  toggleExtraHUD: 1
+  cameraInput: {x: 0, y: 0}
+  cameraVerticalInput: 0
+  cameraHorizontalInput: 0
+  cameraZoomInput: 0
 --- !u!54 &1992362381401405175
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -2779,14 +2782,14 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6396104252544252563}
   serializedVersion: 2
-  m_Mass: 50
+  m_Mass: 1
   m_Drag: 0
   m_AngularDrag: 0.05
   m_UseGravity: 1
   m_IsKinematic: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_Constraints: 112
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
 --- !u!136 &1992362381401405172
 CapsuleCollider:
   m_ObjectHideFlags: 0

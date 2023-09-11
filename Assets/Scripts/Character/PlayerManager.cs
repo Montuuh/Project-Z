@@ -1,11 +1,9 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class PlayerManager : MonoBehaviour
 {
     // Singleton pattern
-    public static PlayerManager instance;
+    public static PlayerManager instance { get; private set; }
 
     private PlayerLocomotion playerLocomotion;
 
@@ -30,6 +28,9 @@ public class PlayerManager : MonoBehaviour
     private void Update()
     {
         InputManager.instance.HandleAllInputs();
+
+        float moveAmount = Mathf.Clamp01(Mathf.Abs(InputManager.instance.horizontalInput) + Mathf.Abs(InputManager.instance.verticalInput));
+        AnimatorManager.instance.UpdateAnimatorValues(0, moveAmount);
     }
 
     // We use FixedUpdate because we are using Rigidbody physics
@@ -40,6 +41,18 @@ public class PlayerManager : MonoBehaviour
 
     private void LateUpdate()
     {
-        //CameraManager.instance.FollowTarget();
+        CameraManager.instance.HandleAllCameraMovement();
+    }
+
+    private void OnCollisionStay(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Terrain"))
+            isGrounded = true;
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        if (collision.gameObject.CompareTag("Terrain"))
+            isGrounded = false;
     }
 }

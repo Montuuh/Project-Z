@@ -3,8 +3,8 @@ using UnityEngine;
 public class AnimatorManager : MonoBehaviour
 {
     // Singleton pattern
-    public static AnimatorManager instance;
-    
+    public static AnimatorManager instance { get; private set; }
+
     private Animator animator;
     private int horizontal;
     private int vertical;

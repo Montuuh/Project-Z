@@ -4,22 +4,25 @@ using UnityEngine;
 public class InputManager : MonoBehaviour
 {
     // Singleton pattern
-    public static InputManager instance;
-    
+    public static InputManager instance { get; private set; }
+
+
     // Input controls
     PlayerControls playerControls;
     DebugKeys debugKeys;
 
-    AnimatorManager animatorManager;
-    private float moveAmount;
-
     // Movement
-    public Vector2 movementInput;
+    public Vector2 movementInput; // This will be the input movement (auto-set)
     public float verticalInput;
     public float horizontalInput;
 
-    // DebugKeys
-    public bool toggleExtraHUD;
+    // Camera
+    public Vector2 cameraInput; // This will be the input camera (auto-set)
+    public float cameraVerticalInput;
+    public float cameraHorizontalInput;
+
+    // Camera Zoom
+    public float cameraZoomInput;
 
     // Events
     public static event Action OnToggleExtraHUD;
@@ -30,8 +33,6 @@ public class InputManager : MonoBehaviour
             Destroy(this);
         else
             instance = this;
-        
-        animatorManager = GetComponent<AnimatorManager>();
     }
 
     private void OnEnable()
@@ -43,6 +44,8 @@ public class InputManager : MonoBehaviour
         
         // Subscribe to input events
         playerControls.PlayerMovement.Movement.performed += ctx => movementInput = ctx.ReadValue<Vector2>();
+        playerControls.PlayerMovement.Camera.performed += ctx => cameraInput = ctx.ReadValue<Vector2>();
+        playerControls.PlayerMovement.CameraZoom.performed += ctx => cameraZoomInput = ctx.ReadValue<Vector2>().y;
 
         // Enable input
         playerControls.Enable();
@@ -51,12 +54,16 @@ public class InputManager : MonoBehaviour
 
     private void OnDisable()
     {
-        playerControls.Disable();
+        if (playerControls != null)
+            playerControls.Disable();
+        if (debugKeys != null)
+            debugKeys.Disable();
     }
 
     public void HandleAllInputs()
     {
         HandleMovementInput();
+        HandleCameraInput();
         HandleDebugKeysInput();
         // HandleJumpInput();
         // HandleAttackInput();
@@ -68,16 +75,17 @@ public class InputManager : MonoBehaviour
     {
         verticalInput = movementInput.y;
         horizontalInput = movementInput.x;
+    }
 
-        moveAmount = Mathf.Clamp01(Mathf.Abs(horizontalInput) + Mathf.Abs(verticalInput));
-        animatorManager.UpdateAnimatorValues(0, moveAmount);
+    private void HandleCameraInput()
+    {
+        cameraVerticalInput = cameraInput.y;
+        cameraHorizontalInput = cameraInput.x;
     }
 
     private void HandleDebugKeysInput()
     {
         if (debugKeys.ExtraHUD.Toggle.triggered)
-        {
             OnToggleExtraHUD?.Invoke();
-        }
     }
 }

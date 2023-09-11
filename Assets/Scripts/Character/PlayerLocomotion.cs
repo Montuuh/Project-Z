@@ -2,9 +2,6 @@ using UnityEngine;
 
 public class PlayerLocomotion : MonoBehaviour
 {
-    // Singleton
-    //private InputManager inputManager;
-    
     private Vector3 moveDirection;
     private Transform cameraObject;
     private Rigidbody playerRigidbody;
@@ -14,7 +11,6 @@ public class PlayerLocomotion : MonoBehaviour
 
     private void Awake()
     {
-        //inputManager = GetComponent<InputManager>();
         playerRigidbody = GetComponent<Rigidbody>();
         cameraObject = Camera.main.transform;
     }
@@ -30,11 +26,9 @@ public class PlayerLocomotion : MonoBehaviour
         moveDirection = cameraObject.forward * InputManager.instance.verticalInput;
         moveDirection += cameraObject.right * InputManager.instance.horizontalInput;
         moveDirection.Normalize();
-        moveDirection.y = 0;
         moveDirection *= moveSpeed;
 
-        Vector3 movementVelocity = moveDirection;
-        playerRigidbody.velocity = movementVelocity;
+        playerRigidbody.velocity = new Vector3(moveDirection.x, playerRigidbody.velocity.y, moveDirection.z);
     }
 
     private void HandleRotation()
