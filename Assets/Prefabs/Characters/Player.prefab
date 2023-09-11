@@ -2770,6 +2770,8 @@ MonoBehaviour:
   movementInput: {x: 0, y: 0}
   verticalInput: 0
   horizontalInput: 0
+  inputIsWalking: 0
+  inputIsSprinting: 0
   cameraInput: {x: 0, y: 0}
   cameraVerticalInput: 0
   cameraHorizontalInput: 0
@@ -2837,12 +2839,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 32d688cb1a1e005439c5fd66ed0ae3ba, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  isInteracting: 0
-  isSprinting: 0
   isGrounded: 0
-  isJumping: 0
-  isFalling: 0
-  isAttacking: 0
+  groundedSensitivity: 0.3
+  fallingThreshold: -1.5
+  playerState: 0
 --- !u!114 &1992362381401405173
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2855,8 +2855,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 95b5916f11bbe28479cd98d282a8eaff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 4
-  rotationSpeed: 16
+  currentSpeed: 0
 --- !u!114 &1992362381401405169
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -162,7 +162,7 @@ public class InfiniteChunks : MonoBehaviour
             this.bounds = new Bounds(position, Vector2.one * chunkSize);
 
             meshObject = new GameObject("Chunk " + numChunk + ": " + this.coord.x + ", " + this.coord.y);
-            meshObject.tag = "Terrain";
+            meshObject.layer = parent.gameObject.layer;
             meshObject.transform.position = positionV3 * chunkScale;
             meshObject.transform.parent = parent;
             meshObject.transform.localScale = Vector3.one * chunkScale;

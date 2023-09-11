@@ -20,8 +20,10 @@ public class PlayerLocomotion : MonoBehaviour
 
     public void HandleAllLocomotion()
     {
-        if (PlayerManager.instance.playerState == PlayerManager.PlayerState.Falling)
+        if (!PlayerManager.instance.isGrounded)
+        {
             return;
+        }
         
         HandleMovement();
         HandleRotation();

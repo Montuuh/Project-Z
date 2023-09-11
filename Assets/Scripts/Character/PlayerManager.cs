@@ -14,12 +14,14 @@ public class PlayerManager : MonoBehaviour
     }
 
     private PlayerLocomotion playerLocomotion;
+    private Rigidbody _rigidbody;
 
     [Header("Player Flags")]
-    //[SerializeField] private bool isInteracting;
-    //[SerializeField] private bool isAttacking;
-    [SerializeField] private bool isGrounded;
-    [SerializeField] public PlayerState playerState;
+    public bool isGrounded;
+    public float groundedSensitivity = 0.4f;
+    public float fallingThreshold = -1.5f;
+    private float lastTimeGrounded;
+    public PlayerState playerState;
 
     private void Awake()
     {
@@ -29,6 +31,7 @@ public class PlayerManager : MonoBehaviour
             instance = this;
 
         playerLocomotion = GetComponent<PlayerLocomotion>();
+        _rigidbody = GetComponent<Rigidbody>();
     }
 
     private void Update()
@@ -50,11 +53,16 @@ public class PlayerManager : MonoBehaviour
             playerState = PlayerState.Idle;
         }
 
-        if (!isGrounded)
-            playerState = PlayerState.Falling;
+        // Grounded sensitivity
+        if (isGrounded)
+            lastTimeGrounded = Time.time;
+
+        bool isCloseToGound = Physics.Raycast(transform.position, Vector3.down, 0.1f, LayerMask.GetMask("Ground"));
+        bool isActuallyFalling = _rigidbody.velocity.y < fallingThreshold;
+        bool shouldFall = !isGrounded && !isCloseToGound && isActuallyFalling;
 
         AnimatorManager.instance.UpdateAnimatorValues(0, moveInputAmount, playerState);
-        AnimatorManager.instance.UpdateIsFalling(!isGrounded);
+        AnimatorManager.instance.UpdateIsFalling(shouldFall);
     }
 
     // We use FixedUpdate because we are using Rigidbody physics
@@ -70,7 +78,7 @@ public class PlayerManager : MonoBehaviour
 
     private void OnCollisionStay(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Terrain"))
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Ground"))
         {
             isGrounded = true;
         }
@@ -78,7 +86,7 @@ public class PlayerManager : MonoBehaviour
 
     private void OnCollisionExit(Collision collision)
     {
-        if (collision.gameObject.CompareTag("Terrain"))
+        if (collision.gameObject.layer == LayerMask.NameToLayer("Ground"))
         {
             isGrounded = false;
         }
