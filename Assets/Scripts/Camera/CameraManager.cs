@@ -12,6 +12,8 @@ public class CameraManager : MonoBehaviour
     private float cameraFollowSpeed = 10f;
     private float cameraRotationSpeed = 12f;
     private float cameraZoomSpeed = 2f;
+    private float cameraSmoothTime = 0.2f;
+    private float currentCameraVelocity;
 
     // Desired direction of the rotation
     private float angleY;  // Rotation around the Y axis
@@ -51,6 +53,7 @@ public class CameraManager : MonoBehaviour
     {
         HandleCameraRotation();
         HandleCameraZoom();
+        HandleCameraCollisions();
         HandleCameraMovement();
     }
 
@@ -78,5 +81,27 @@ public class CameraManager : MonoBehaviour
     {
         Vector3 position = targetTransform.position + rotation * new Vector3(rightOffset, heightOffset, -distance);
         cameraTransform.position = Vector3.Lerp(cameraTransform.position, position, Time.deltaTime * cameraFollowSpeed);
+    }
+
+    private void HandleCameraCollisions()
+    {
+        // The direction from the camera to the player
+        Vector3 toPlayer = targetTransform.position - cameraTransform.position;
+
+        // Perform the raycast
+        RaycastHit hit;
+        float newDistance = defaultDistance;  // Initialize newDistance with defaultDistance
+
+        if (Physics.Raycast(targetTransform.position, -toPlayer.normalized, out hit, defaultDistance))
+        {
+            // If something was hit, set the new distance to the hit point
+            if (hit.collider.gameObject != targetTransform.gameObject)
+            {
+                newDistance = hit.distance;
+            }
+        }
+
+        // Smoothly interpolate between the current distance and the new distance
+        distance = Mathf.SmoothDamp(distance, newDistance, ref cameraSmoothTime, currentCameraVelocity);
     }
 }
