@@ -8,35 +8,29 @@ using UnityEngine;
 
 public class MapGenerator : MonoBehaviour
 {
+    // Singleton pattern
     public static MapGenerator Instance;
+    
+    // Enums
 
+    #region Inspector Variables
     public enum MapTypeGen { Map2D_perlin, Map2D_texture, Map3D_perlin, Map3D_texture, Map3D_Infinite }
     public enum MapNormalizeMode { Local, Global }
+    public TerrainData terrainData;
+    public NoiseData noiseData;
 
     public MapTypeGen mapType;
-    public MapNormalizeMode normalizeMode;
     public bool autoUpdateEditor;
-
-    [SerializeField] private const int chunkSize = 129;
-    [SerializeField] private const int mapSize = chunkSize;
     [Range(0, 3)] public int editorLodIndex = 0;
-
-    [Range(1, 10)] public int octaves = 1;
-    [Range(0.1f, 1f)] public float persistance = 0.5f;
-    [Range(1f, 10f)] public float lacunarity = 2f;
-
-    [Range(5f, 100f)] public float scale = 5f;
-    
-    [Range(0, 100000)] public int seed = 0;
-
-    [Range(0.5f, 50f)] public float heightMultiplier = 1f;
-    public AnimationCurve heightCurve;
-    public Vector2 offset = new Vector2(0, 0);
-
     public GameObject local2Dmesh;
     public GameObject local3Dmesh;
-
-    [SerializeField] public TerrainType[] terrainTypes;
+    public TerrainType[] terrainTypes;
+    #endregion
+    
+    #region Hide Variables
+    private const int chunkSize = 129;
+    private const int mapSize = chunkSize;
+    #endregion
 
     private ConcurrentQueue<MapThreadInfo<MapData>> mapDataThreadInfoQueue = new ConcurrentQueue<MapThreadInfo<MapData>>();
     private ConcurrentQueue<MapThreadInfo<MeshData>> meshDataThreadInfoQueue = new ConcurrentQueue<MapThreadInfo<MeshData>>();
@@ -58,6 +52,28 @@ public class MapGenerator : MonoBehaviour
         {
             Debug.LogError("More than one MapGenerator in scene!");
             Destroy(this);
+        }
+    }
+
+    private void OnValidate()
+    {
+        if (noiseData != null)
+        {
+            noiseData.OnValuesUpdated -= OnValuesUpdated;
+            noiseData.OnValuesUpdated += OnValuesUpdated;
+        }
+        if (terrainData != null)
+        {
+            terrainData.OnValuesUpdated -= OnValuesUpdated;
+            terrainData.OnValuesUpdated += OnValuesUpdated;
+        }
+    }
+
+    private void OnValuesUpdated()
+    {
+        if (!Application.isPlaying)
+        {
+            GenerateMap();
         }
     }
 
@@ -101,9 +117,6 @@ public class MapGenerator : MonoBehaviour
     // This function generates the map data and draws it (only called from editor button)
     public void GenerateMap()
     {
-        // This function sets the active map (2D or 3D or Infinite)
-        HandleMap();
-
         // Generate initial map data
         MapData mapData = GenerateMapData(Vector2.zero);
 
@@ -125,37 +138,12 @@ public class MapGenerator : MonoBehaviour
                 break;
             case MapTypeGen.Map3D_perlin:
                 SetTexture(texture2D);
-                local3Dmesh.GetComponent<MeshFilter>().sharedMesh = MeshDataHelper.GenerateTerrainMesh(mapData.noiseMap, heightMultiplier, heightCurve, editorLodIndex).ToMesh();
+                local3Dmesh.GetComponent<MeshFilter>().sharedMesh = MeshDataHelper.GenerateTerrainMesh(mapData.noiseMap, terrainData.heightMultiplier, terrainData.heightCurve, editorLodIndex).ToMesh();
                 break;
             case MapTypeGen.Map3D_texture:
                 texture2D = TextureHelper.ColorMapToTexture(mapData.colorMap, chunkSize);
                 SetTexture(texture2D);
-                local3Dmesh.GetComponent<MeshFilter>().sharedMesh = MeshDataHelper.GenerateTerrainMesh(mapData.noiseMap, heightMultiplier, heightCurve, editorLodIndex).ToMesh();
-                break;
-        }
-    }
-
-    private void HandleMap()
-    {
-        switch (mapType)
-        {
-            case MapTypeGen.Map2D_perlin:
-            case MapTypeGen.Map2D_texture:
-                local2Dmesh.gameObject.SetActive(true);
-                local3Dmesh.SetActive(false);
-                break;
-            case MapTypeGen.Map3D_perlin:
-            case MapTypeGen.Map3D_texture:
-                local2Dmesh.gameObject.SetActive(false);
-                local3Dmesh.SetActive(true);
-                break;
-            case MapTypeGen.Map3D_Infinite:
-                local2Dmesh.gameObject.SetActive(false);
-                local3Dmesh.SetActive(false);
-
-#if UNITY_EDITOR
-                EditorApplication.isPlaying = true;
-#endif
+                local3Dmesh.GetComponent<MeshFilter>().sharedMesh = MeshDataHelper.GenerateTerrainMesh(mapData.noiseMap, terrainData.heightMultiplier, terrainData.heightCurve, editorLodIndex).ToMesh();
                 break;
         }
     }
@@ -174,7 +162,7 @@ public class MapGenerator : MonoBehaviour
     private MapData GenerateMapData(Vector2 chunkOffset)
     {
         // Generate noise map
-        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, scale, octaves, persistance, lacunarity, offset + chunkOffset, normalizeMode, seed);
+        float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, noiseData.scale, noiseData.octaves, noiseData.persistance, noiseData.lacunarity, noiseData.offset + chunkOffset, noiseData.normalizeMode, noiseData.seed);
 
         // Generate color map from terrain types
         Color[] colorMap = TextureHelper.GetColorMapFromNoiseMap(noiseMap, terrainTypes);
@@ -213,7 +201,7 @@ public class MapGenerator : MonoBehaviour
 
     void MeshDataThread(Action<MeshData> callback, MapData mapData, int lod)
     {
-        MeshData meshData = MeshDataHelper.GenerateTerrainMesh(mapData.noiseMap, heightMultiplier, heightCurve, lod);
+        MeshData meshData = MeshDataHelper.GenerateTerrainMesh(mapData.noiseMap, terrainData.heightMultiplier, terrainData.heightCurve, lod);
 
         // Using concurrent queues, lock is not needed because it is thread safe
         meshDataThreadInfoQueue.Enqueue(new MapThreadInfo<MeshData>(callback, meshData));
