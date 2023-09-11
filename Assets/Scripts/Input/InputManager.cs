@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using static PlayerManager;
 
 public class InputManager : MonoBehaviour
 {
@@ -15,6 +16,11 @@ public class InputManager : MonoBehaviour
     public Vector2 movementInput; // This will be the input movement (auto-set)
     public float verticalInput;
     public float horizontalInput;
+
+    // Actions
+    public bool inputIsWalking;
+    public bool inputIsSprinting;
+    //public bool inputIsJumping;
 
     // Camera
     public Vector2 cameraInput; // This will be the input camera (auto-set)
@@ -46,6 +52,11 @@ public class InputManager : MonoBehaviour
         playerControls.PlayerMovement.Movement.performed += ctx => movementInput = ctx.ReadValue<Vector2>();
         playerControls.PlayerMovement.Camera.performed += ctx => cameraInput = ctx.ReadValue<Vector2>();
         playerControls.PlayerMovement.CameraZoom.performed += ctx => cameraZoomInput = ctx.ReadValue<Vector2>().y;
+        playerControls.PlayerActions.Walking.performed += ctx => inputIsWalking = true;
+        playerControls.PlayerActions.Walking.canceled += ctx => inputIsWalking = false;
+        playerControls.PlayerActions.Sprinting.performed += ctx => inputIsSprinting = true;
+        playerControls.PlayerActions.Sprinting.canceled += ctx => inputIsSprinting = false;
+        //playerControls.PlayerActions.Jumping.performed += ctx => isJumping = ctx.ReadValueAsButton();
 
         // Enable input
         playerControls.Enable();
@@ -65,10 +76,6 @@ public class InputManager : MonoBehaviour
         HandleMovementInput();
         HandleCameraInput();
         HandleDebugKeysInput();
-        // HandleJumpInput();
-        // HandleAttackInput();
-        // HandleInventoryInput();
-        // HandleInteractInput();
     }
 
     private void HandleMovementInput()

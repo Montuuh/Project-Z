@@ -74,7 +74,8 @@ public class CameraManager : MonoBehaviour
         // Zoom functionality
         float scrollData = InputManager.instance.cameraZoomInput;
         scrollData = Mathf.Clamp(scrollData, -1f, 1f);
-        distance = Mathf.Clamp(distance - scrollData * cameraZoomSpeed, minDistance, maxDistance);
+        if (scrollData != 0)
+            distance = Mathf.Clamp(distance - scrollData * cameraZoomSpeed, minDistance, maxDistance);
     }
 
     private void HandleCameraMovement()
@@ -90,18 +91,17 @@ public class CameraManager : MonoBehaviour
 
         // Perform the raycast
         RaycastHit hit;
-        float newDistance = defaultDistance;  // Initialize newDistance with defaultDistance
 
         if (Physics.Raycast(targetTransform.position, -toPlayer.normalized, out hit, defaultDistance))
         {
             // If something was hit, set the new distance to the hit point
             if (hit.collider.gameObject != targetTransform.gameObject)
             {
-                newDistance = hit.distance;
+                // Smoothly interpolate between the current distance and the new distance
+                distance = Mathf.SmoothDamp(distance, hit.distance, ref cameraSmoothTime, currentCameraVelocity);
             }
         }
 
-        // Smoothly interpolate between the current distance and the new distance
-        distance = Mathf.SmoothDamp(distance, newDistance, ref cameraSmoothTime, currentCameraVelocity);
+        
     }
 }

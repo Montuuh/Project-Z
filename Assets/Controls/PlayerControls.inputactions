@@ -277,6 +277,96 @@
                     "isPartOfComposite": false
                 }
             ]
+        },
+        {
+            "name": "PlayerActions",
+            "id": "0d0e21f1-644a-4af1-b6b5-fbb3f3309356",
+            "actions": [
+                {
+                    "name": "Sprinting",
+                    "type": "Button",
+                    "id": "578a1c36-1888-4b70-9dd5-c078e1c03bb7",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Walking",
+                    "type": "Button",
+                    "id": "123f9145-c904-49cf-86b9-9e04449e34a6",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                },
+                {
+                    "name": "Jumping",
+                    "type": "Button",
+                    "id": "a7dfe8cb-15d7-4e98-bfe6-9f5238ceb9bc",
+                    "expectedControlType": "Button",
+                    "processors": "",
+                    "interactions": "",
+                    "initialStateCheck": false
+                }
+            ],
+            "bindings": [
+                {
+                    "name": "",
+                    "id": "89c86fee-5c9a-4aeb-be3b-edb43d3ae4e9",
+                    "path": "<Gamepad>/buttonEast",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Sprinting",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "c1ac8abe-b8d4-43fb-9235-01b6d71814a9",
+                    "path": "<Keyboard>/shift",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Sprinting",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "b6de254c-474c-4019-8b88-cad6164ba76f",
+                    "path": "<Keyboard>/ctrl",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Walking",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "30a6c0af-8495-4d28-b2e3-77c3f5082253",
+                    "path": "<Gamepad>/buttonSouth",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Jumping",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                },
+                {
+                    "name": "",
+                    "id": "25b0aa00-3dda-466c-b341-494ac7dcbf3a",
+                    "path": "<Keyboard>/space",
+                    "interactions": "",
+                    "processors": "",
+                    "groups": "",
+                    "action": "Jumping",
+                    "isComposite": false,
+                    "isPartOfComposite": false
+                }
+            ]
         }
     ],
     "controlSchemes": []

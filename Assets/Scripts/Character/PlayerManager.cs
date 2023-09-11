@@ -4,17 +4,25 @@ public class PlayerManager : MonoBehaviour
 {
     // Singleton pattern
     public static PlayerManager instance { get; private set; }
+    public enum PlayerState
+    {
+        Idle,
+        Walking,
+        Running,
+        Sprinting
+    }
 
     private PlayerLocomotion playerLocomotion;
 
     [Header("Player Flags")]
-    [SerializeField] private bool isInteracting;
-    [SerializeField] private bool isSprinting;
+    //[SerializeField] public bool isWalking;
+    //[SerializeField] public bool isSprinting;
+    //[SerializeField] private bool isInteracting;
+    //[SerializeField] private bool isFalling;
+    //[SerializeField] private bool isAttacking;
     [SerializeField] private bool isGrounded;
-    [SerializeField] private bool isJumping;
-    [SerializeField] private bool isFalling;
-    [SerializeField] private bool isAttacking;
-    
+    [SerializeField] public PlayerState playerState;
+
     private void Awake()
     {
         if (instance != null)
@@ -28,9 +36,23 @@ public class PlayerManager : MonoBehaviour
     private void Update()
     {
         InputManager.instance.HandleAllInputs();
+        float moveInputAmount = Mathf.Clamp01(Mathf.Abs(InputManager.instance.horizontalInput) + Mathf.Abs(InputManager.instance.verticalInput));
 
-        float moveAmount = Mathf.Clamp01(Mathf.Abs(InputManager.instance.horizontalInput) + Mathf.Abs(InputManager.instance.verticalInput));
-        AnimatorManager.instance.UpdateAnimatorValues(0, moveAmount);
+        if (moveInputAmount > 0)
+        {
+            if (InputManager.instance.inputIsWalking)
+                playerState = PlayerState.Walking;
+            else if (InputManager.instance.inputIsSprinting)
+                playerState = PlayerState.Sprinting;
+            else
+                playerState = PlayerState.Running;
+        }
+        else
+        {
+            playerState = PlayerState.Idle;
+        }
+
+        AnimatorManager.instance.UpdateAnimatorValues(0, moveInputAmount, playerState);
     }
 
     // We use FixedUpdate because we are using Rigidbody physics

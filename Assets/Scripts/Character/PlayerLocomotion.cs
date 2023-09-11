@@ -6,8 +6,11 @@ public class PlayerLocomotion : MonoBehaviour
     private Transform cameraObject;
     private Rigidbody playerRigidbody;
 
-    public float moveSpeed = 4f;
-    public float rotationSpeed = 16f;
+    [SerializeField] private float currentSpeed;
+    private float walkSpeed = 2f;    // Walking speed
+    private float runningSpeed = 4f; // Default speed running
+    private float sprintSpeed = 6f;  // Sprinting speed
+    private float rotationSpeed = 16f;
 
     private void Awake()
     {
@@ -26,8 +29,14 @@ public class PlayerLocomotion : MonoBehaviour
         moveDirection = cameraObject.forward * InputManager.instance.verticalInput;
         moveDirection += cameraObject.right * InputManager.instance.horizontalInput;
         moveDirection.Normalize();
-        moveDirection *= moveSpeed;
 
+        if (PlayerManager.instance.playerState == PlayerManager.PlayerState.Walking)
+            currentSpeed = walkSpeed;
+        else if (PlayerManager.instance.playerState == PlayerManager.PlayerState.Sprinting)
+            currentSpeed = sprintSpeed;
+        else
+            currentSpeed = runningSpeed;
+        moveDirection *= currentSpeed;
         playerRigidbody.velocity = new Vector3(moveDirection.x, playerRigidbody.velocity.y, moveDirection.z);
     }
 
