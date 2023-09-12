@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Threading;
 using UnityEditor;
 using UnityEngine;
+using static UnityEngine.EventSystems.EventTrigger;
 
 public class MapGenerator : MonoBehaviour
 {
@@ -14,17 +15,19 @@ public class MapGenerator : MonoBehaviour
     // Enums
 
     #region Inspector Variables
-    public enum MapTypeGen { Map2D_perlin, Map2D_texture, Map3D_perlin, Map3D_texture, Map3D_Infinite }
+    public enum MapTypeGen { perlinNoise, mesh }
     public enum MapNormalizeMode { Local, Global }
     public TerrainData terrainData;
     public NoiseData noiseData;
+    public TextureData textureData;
+
+    public Material terrainMaterial;
 
     public MapTypeGen mapType;
     public bool autoUpdateEditor;
     [Range(0, 3)] public int editorLodIndex = 0;
     public GameObject local2Dmesh;
     public GameObject local3Dmesh;
-    public TerrainType[] terrainTypes;
     #endregion
     
     #region Hide Variables
@@ -53,6 +56,8 @@ public class MapGenerator : MonoBehaviour
             Debug.LogError("More than one MapGenerator in scene!");
             Destroy(this);
         }
+
+        textureData.UpdateMeshHeights(terrainMaterial, terrainData.minHeight, terrainData.maxHeight);
     }
 
     private void OnValidate()
@@ -67,6 +72,11 @@ public class MapGenerator : MonoBehaviour
             terrainData.OnValuesUpdated -= OnValuesUpdated;
             terrainData.OnValuesUpdated += OnValuesUpdated;
         }
+        if (textureData != null)
+        {
+            textureData.OnValuesUpdated -= OnTextureValuesUpdated;
+            textureData.OnValuesUpdated += OnTextureValuesUpdated;
+        }
     }
 
     private void OnValuesUpdated()
@@ -75,6 +85,11 @@ public class MapGenerator : MonoBehaviour
         {
             GenerateMap();
         }
+    }
+
+    private void OnTextureValuesUpdated()
+    {
+        textureData.ApplyToMaterial(terrainMaterial);
     }
 
     public void Start()
@@ -117,6 +132,8 @@ public class MapGenerator : MonoBehaviour
     // This function generates the map data and draws it (only called from editor button)
     public void GenerateMap()
     {
+        textureData.UpdateMeshHeights(terrainMaterial, terrainData.minHeight, terrainData.maxHeight);
+
         // Generate initial map data
         MapData mapData = GenerateMapData(Vector2.zero);
 
@@ -129,21 +146,12 @@ public class MapGenerator : MonoBehaviour
         Texture2D texture2D = TextureHelper.NoiseMapToTexture(mapData.noiseMap);
         switch (mapType)
         {
-            case MapTypeGen.Map2D_perlin:
+            case MapTypeGen.perlinNoise:
                 SetTexture(texture2D);
                 break;
-            case MapTypeGen.Map2D_texture:
-                texture2D = TextureHelper.ColorMapToTexture(mapData.colorMap, chunkSize);
-                SetTexture(texture2D);
-                break;
-            case MapTypeGen.Map3D_perlin:
-                SetTexture(texture2D);
+            case MapTypeGen.mesh:
                 local3Dmesh.GetComponent<MeshFilter>().sharedMesh = MeshDataHelper.GenerateTerrainMesh(mapData.noiseMap, terrainData.heightMultiplier, terrainData.heightCurve, editorLodIndex).ToMesh();
-                break;
-            case MapTypeGen.Map3D_texture:
-                texture2D = TextureHelper.ColorMapToTexture(mapData.colorMap, chunkSize);
-                SetTexture(texture2D);
-                local3Dmesh.GetComponent<MeshFilter>().sharedMesh = MeshDataHelper.GenerateTerrainMesh(mapData.noiseMap, terrainData.heightMultiplier, terrainData.heightCurve, editorLodIndex).ToMesh();
+                local3Dmesh.transform.localScale = Vector3.one * terrainData.uniformScale;
                 break;
         }
     }
@@ -164,10 +172,7 @@ public class MapGenerator : MonoBehaviour
         // Generate noise map
         float[,] noiseMap = NoiseGenerator.GenerateNoiseMap(chunkSize, noiseData.scale, noiseData.octaves, noiseData.persistance, noiseData.lacunarity, noiseData.offset + chunkOffset, noiseData.normalizeMode, noiseData.seed);
 
-        // Generate color map from terrain types
-        Color[] colorMap = TextureHelper.GetColorMapFromNoiseMap(noiseMap, terrainTypes);
-
-        return new MapData(noiseMap, colorMap);
+        return new MapData(noiseMap);
     }
 
     // Threading
@@ -222,38 +227,13 @@ public class MapGenerator : MonoBehaviour
 }
 
 [System.Serializable]
-public class TerrainType
-{
-    [SerializeField] private string name;
-    [SerializeField] private float height;
-    [SerializeField] private Color color;
-
-    public TerrainType(string name, float height, Color color)
-    {
-        this.name = name;
-        this.height = height;
-        this.color = color;
-    }
-
-    public string Name => name;
-    public float Height => height;
-    public Color Color => color;
-}
-
-[System.Serializable]
 public struct MapData
 {
     public float[,] noiseMap;
-    public Color[] colorMap;
-    // public MeshData meshData;
-    // public int lodIndex;
 
-    public MapData(float[,] noiseMap, Color[] colorMap/*, MeshData meshData, int lodIndex*/)
+    public MapData(float[,] noiseMap)
     {
         this.noiseMap = noiseMap;
-        this.colorMap = colorMap;
-        // this.meshData = meshData;
-        // this.lodIndex = lodIndex;
     }
 }
 

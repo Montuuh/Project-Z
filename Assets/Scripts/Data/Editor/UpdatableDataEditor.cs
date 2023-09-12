@@ -6,18 +6,14 @@ public class UpdatableDataEditor : Editor
 {
     public override void OnInspectorGUI()
     {
+        base.OnInspectorGUI();
+
         UpdatableData data = (UpdatableData)target;
 
-        if (DrawDefaultInspector() && data.autoUpdate)
-        {
-            Debug.Log("AutoUpdate");
-            data.NotifyOfUpdatedValues();
-        }
-        
         if (GUILayout.Button("Update"))
         {
-            Debug.Log("Update");
             data.NotifyOfUpdatedValues();
+            EditorUtility.SetDirty(target);
         }
     }
 }

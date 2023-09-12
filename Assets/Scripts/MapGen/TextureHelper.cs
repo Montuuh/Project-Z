@@ -33,41 +33,41 @@ public static class TextureHelper
     }
 
     // This function transforms a noise map into a basic color map array depending on the terrain types
-    public static Color[] GetColorMapFromNoiseMap(float[,] noiseMap, TerrainType[] terrainTypes)
-    {
-        int chunkSize = noiseMap.GetLength(0);
+    //public static Color[] GetColorMapFromNoiseMap(float[,] noiseMap, TerrainType[] terrainTypes)
+    //{
+    //    int chunkSize = noiseMap.GetLength(0);
 
-        Color[] colorMap = new Color[chunkSize * chunkSize];
-        for (int y = 0; y < chunkSize; y++)
-        {
-            for (int x = 0; x < chunkSize; x++)
-            {
-                float currentHeight = noiseMap[x, y];
+    //    Color[] colorMap = new Color[chunkSize * chunkSize];
+    //    for (int y = 0; y < chunkSize; y++)
+    //    {
+    //        for (int x = 0; x < chunkSize; x++)
+    //        {
+    //            float currentHeight = noiseMap[x, y];
 
-                // Boundaries
-                if (currentHeight < 0) // Heights less than 0
-                {
-                    colorMap[y * chunkSize + x] = terrainTypes[0].Color;
-                    continue;
-                }
-                else if (currentHeight > 1) // Heights greater than 1
-                {
-                    colorMap[y * chunkSize + x] = terrainTypes[terrainTypes.Length - 1].Color;
-                    continue;
-                }
-                for (int i = 0; i < terrainTypes.Length; i++) // Heights between 0 and 1
-                {
-                    if (currentHeight <= terrainTypes[i].Height)
-                    {
-                        colorMap[y * chunkSize + x] = terrainTypes[i].Color;
-                        break;
-                    }
-                }
-            }
-        }
+    //            // Boundaries
+    //            if (currentHeight < 0) // Heights less than 0
+    //            {
+    //                colorMap[y * chunkSize + x] = terrainTypes[0].Color;
+    //                continue;
+    //            }
+    //            else if (currentHeight > 1) // Heights greater than 1
+    //            {
+    //                colorMap[y * chunkSize + x] = terrainTypes[terrainTypes.Length - 1].Color;
+    //                continue;
+    //            }
+    //            for (int i = 0; i < terrainTypes.Length; i++) // Heights between 0 and 1
+    //            {
+    //                if (currentHeight <= terrainTypes[i].Height)
+    //                {
+    //                    colorMap[y * chunkSize + x] = terrainTypes[i].Color;
+    //                    break;
+    //                }
+    //            }
+    //        }
+    //    }
 
-        return colorMap;
-    }
+    //    return colorMap;
+    //}
 
     // This function transforms a noise map into a basic black and white color map array
     public static Color[] GetColorMapFromNoiseMap(float[,] noiseMap)

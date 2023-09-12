@@ -14,54 +14,27 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   autoUpdate: 1
   uniformScale: 1.5
-  heightMultiplier: 28
+  heightMultiplier: 25.1
   heightCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
-      time: 0.0013694763
+      time: 0
       value: 0
-      inSlope: 0.5733458
-      outSlope: 0.5733458
+      inSlope: 0
+      outSlope: 0
       tangentMode: 0
       weightedMode: 0
       inWeight: 0
-      outWeight: 0.30344322
+      outWeight: 0
     - serializedVersion: 3
-      time: 0.22677562
-      value: 0.15327488
-      inSlope: 0.109491676
-      outSlope: 0.109491676
+      time: 1
+      value: 1
+      inSlope: 2
+      outSlope: 2
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.2942155
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 0.61581093
-      value: 0.24149731
-      inSlope: 0.63655293
-      outSlope: 0.63655293
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.2116924
-      outWeight: 0.33333334
-    - serializedVersion: 3
-      time: 0.8300751
-      value: 0.8827539
-      inSlope: 3.0737083
-      outSlope: 3.0737083
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.155617
-    - serializedVersion: 3
-      time: 1.0388838
-      value: 1.2554199
-      inSlope: 0.112030946
-      outSlope: 0.112030946
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.19517417
+      inWeight: 0
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
