@@ -10,49 +10,49 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9b2365cfd73c93040a55139f7b6d82fd, type: 3}
-  m_Name: Terrain Default
+  m_Name: TerrainIslands
   m_EditorClassIdentifier: 
   autoUpdate: 1
   uniformScale: 1.5
-  heightMultiplier: 33
+  heightMultiplier: 9.9
   heightCurve:
     serializedVersion: 2
     m_Curve:
     - serializedVersion: 3
       time: 0
       value: 0
-      inSlope: 0
-      outSlope: 0
-      tangentMode: 0
+      inSlope: 0.18843172
+      outSlope: 0.18843172
+      tangentMode: 34
       weightedMode: 0
       inWeight: 0
-      outWeight: 0
-    - serializedVersion: 3
-      time: 0.29477027
-      value: 0.11275141
-      inSlope: 0.6093488
-      outSlope: 0.6093488
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.33333334
       outWeight: 0.33333334
     - serializedVersion: 3
-      time: 0.7198246
-      value: 0.71716475
-      inSlope: 3.326764
-      outSlope: 3.326764
+      time: 0.22418824
+      value: 0.042244177
+      inSlope: 0.8259384
+      outSlope: 0.8259384
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.038373463
-      outWeight: 0.16995518
+      inWeight: 0.14236161
+      outWeight: 0.33333334
     - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0.26060596
-      outSlope: 0.26060596
+      time: 0.6903546
+      value: 0.25968206
+      inSlope: 1.1644773
+      outSlope: 1.1644773
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.268544
+      inWeight: 0.05500466
+      outWeight: 0.11531436
+    - serializedVersion: 3
+      time: 0.99295044
+      value: 0.4652977
+      inSlope: 0.6795058
+      outSlope: 0.6795058
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0.33333334
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2

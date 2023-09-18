@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 9b2365cfd73c93040a55139f7b6d82fd, type: 3}
-  m_Name: Terrain Default
+  m_Name: TerrainMountains
   m_EditorClassIdentifier: 
   autoUpdate: 1
   uniformScale: 1.5
-  heightMultiplier: 33
+  heightMultiplier: 26.6
   heightCurve:
     serializedVersion: 2
     m_Curve:
@@ -28,31 +28,22 @@ MonoBehaviour:
       inWeight: 0
       outWeight: 0
     - serializedVersion: 3
-      time: 0.29477027
-      value: 0.11275141
-      inSlope: 0.6093488
-      outSlope: 0.6093488
+      time: 0.74974144
+      value: 0.6637152
+      inSlope: 1.96161
+      outSlope: 1.96161
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.33333334
-      outWeight: 0.33333334
+      inWeight: 0.22708373
+      outWeight: 0.47792837
     - serializedVersion: 3
-      time: 0.7198246
-      value: 0.71716475
-      inSlope: 3.326764
-      outSlope: 3.326764
+      time: 1.2693787
+      value: 1.4147034
+      inSlope: 0.36366957
+      outSlope: 0.36366957
       tangentMode: 0
       weightedMode: 0
-      inWeight: 0.038373463
-      outWeight: 0.16995518
-    - serializedVersion: 3
-      time: 1
-      value: 1
-      inSlope: 0.26060596
-      outSlope: 0.26060596
-      tangentMode: 0
-      weightedMode: 0
-      inWeight: 0.268544
+      inWeight: 0.90342057
       outWeight: 0
     m_PreInfinity: 2
     m_PostInfinity: 2
